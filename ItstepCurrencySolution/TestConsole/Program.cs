@@ -6,6 +6,10 @@ using System.Threading.Tasks;
 
 namespace TestConsole
 {
+    class Blockchain
+    {
+
+    }
     class Program
     {
         static void Main(string[] args)
