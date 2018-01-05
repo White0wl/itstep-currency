@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26730.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepCoin", "StepCoin\StepCoin.csproj", "{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggerLibrary", "LoggerLibrary\LoggerLibrary.csproj", "{20A3D632-45AD-44D5-A768-5DE86541F208}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{C26F0838-69CC-4FA2-93BA-E485E84DA247}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20A3D632-45AD-44D5-A768-5DE86541F208}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20A3D632-45AD-44D5-A768-5DE86541F208}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20A3D632-45AD-44D5-A768-5DE86541F208}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20A3D632-45AD-44D5-A768-5DE86541F208}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CC8EE180-CB0F-4363-9D59-D29143B3E69F}
+	EndGlobalSection
+EndGlobal
