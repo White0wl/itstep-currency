@@ -16,7 +16,7 @@ namespace StepCoin
         public static int BlockCountConfirmations { get; set; }//Требуемое количество подтверждений нового блока для добавления в цепь(BlockChain) 
                                                                //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
 
-        public static TimeSpan TransactionConfirmationTime { get; set; } = new TimeSpan(0, 1, 0);//Время для распространения и подтверждения/опровержения новой транзакции
-        public static TimeSpan BlockConfirmationTime { get; set; } = new TimeSpan(0, 1, 0);//Время для распространения и подтверждения/опровержения нового блока
+        public static TimeSpan TransactionConfirmationTime { get; set; } = new TimeSpan(0, 0, 0);//Время для распространения и подтверждения/опровержения новой транзакции
+        public static TimeSpan BlockConfirmationTime { get; set; } = new TimeSpan(0, 0, 0);//Время для распространения и подтверждения/опровержения нового блока
     }
 }

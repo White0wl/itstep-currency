@@ -14,16 +14,23 @@ namespace StepCoin.BlockChainClasses
         public HashCode Recipient { get; } //адрес получателя
         public decimal Amount { get; } //сумма
         public DateTime Timestamp { get; private set; } //время создания
-        public override HashCode Hash => new HashCode(HashGenerator.GenerateString(MD5.Create(), Encoding.Unicode.GetBytes($"{Sender}{Recipient}{Amount}{Timestamp}")));
-        public override ChainElememnt Clone => new Transaction(Sender.Clone, Recipient.Clone, Amount, Id) { Timestamp = Timestamp };
+        public override ChainElememnt Clone => new Transaction(Sender.Clone, Recipient.Clone, Amount, Id, Timestamp);
 
-        public Transaction(HashCode sender, HashCode resepient, decimal amount, int id)
+        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(MD5.Create(), Encoding.Unicode.GetBytes($"{Id}{Sender}{Recipient}{Amount}{Timestamp}")));
+
+        public Transaction(HashCode sender, HashCode recipient, decimal amount, int id)
         {
             Id = id;
             Sender = sender.Clone;
-            Recipient = resepient.Clone;
+            Recipient = recipient.Clone;
             Amount = amount;
             Timestamp = DateTime.Now;
+            Hash = CalculateHash();
+        }
+
+        private Transaction(HashCode sender, HashCode recipient, decimal amount, int id, DateTime time) : this(sender, recipient, amount, id)
+        {
+            Timestamp = time;
         }
 
         public override string ToString()

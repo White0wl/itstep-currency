@@ -13,8 +13,7 @@ namespace StepCoin.BlockChainClasses
         public int Difficulty { get; private set; }
         public int Nonce { get; private set; }
         public IEnumerable<Transaction> Transactions { get => _transactions.Select(t => t.Clone as Transaction); internal set => _transactions = value.ToList(); }
-        public override ChainElememnt Clone => new Block(PrevHash.Clone, Id) { Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner.Clone, _timestamp = _timestamp };
-        public override HashCode Hash => CalculateHash();
+        public override ChainElememnt Clone => new Block(PrevHash, Id) { Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner?.Clone, _timestamp = _timestamp };
 
         private List<Transaction> _transactions = new List<Transaction>();
         private HashCode _miner;//адрес эккаунта майнера, на который переведется вознаграждение   
@@ -26,7 +25,12 @@ namespace StepCoin.BlockChainClasses
             Id = id;
         }
 
-        private HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(SHA256.Create(),
+        internal Block(HashCode prevHash, HashCode hash, int id) : this(prevHash, id)
+        {
+            Hash = hash.Clone;
+        }
+
+        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(SHA256.Create(),
                 Encoding.Unicode.GetBytes($"{Id}{PrevHash}{String.Join(string.Empty, Transactions.Select(t => t.Hash))}{Nonce}")));
 
         internal HashCode CalculateNewHash(int difficulty, HashCode miner)
@@ -35,7 +39,8 @@ namespace StepCoin.BlockChainClasses
             Nonce++;
             _timestamp = DateTime.Now;
             _miner = miner.Clone;
-            return CalculateHash();
+            Hash = CalculateHash();
+            return Hash;
         }
 
         public override string ToString()

@@ -36,7 +36,7 @@ namespace StepCoin.Validators
             {
                 Block prevBlock = blockChain.Chain[i - 1];
                 Block block = blockChain.Chain[i];
-                result = block.PrevHash == prevBlock.Hash;
+                result = block.PrevHash == prevBlock.Hash && block.Hash == block.CalculateHash();
                 if (!result) break;
             }
             return result;

@@ -3,17 +3,39 @@ using StepCoin.BlockChainClasses;
 using StepCoin.Hash;
 using StepCoin.Validators;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 
 namespace StepCoin.User
 {
+
+    public class NodeObserver
+    {
+        public List<Node> Nodes { get; set; } = new List<Node>();
+
+        public void Attach(Node node)
+        {
+            if (Nodes.FirstOrDefault(n => n.Account.PublicAddress == node.Account.PublicAddress) is null)
+                Nodes.Add(node);
+        }
+
+        public void Detach(Node node) => Nodes.Remove(node);
+
+        public void BlockNotification(List<Block> blocks) =>
+            Nodes.ForEach(n => blocks.ForEach(b => n.TryAddBlock(b)));
+        public void PendingElementsNotification(List<PendingConfirmChainElement> pendingElements) =>
+            Nodes.ForEach(n => pendingElements.ForEach(pe => n.TryAddPendingElement(pe)));
+    }
+
     public class Node
     {
         public Account Account { get; set; }
         public BlockChain BlockChain { get; set; }
         public Miner Miner { get; set; }
+
+        public NodeObserver Observer { get; set; } = new NodeObserver();
 
         //Блоки ожидающие подтверждения других пользователей
         public ObservableCollection<PendingConfirmChainElement> PendingConfirmElements { get; set; } = new ObservableCollection<PendingConfirmChainElement>();
@@ -29,7 +51,7 @@ namespace StepCoin.User
             }
         }
 
-        public Node(string name, Node baseNode = null)
+        public Node(string name)
         {
             Account = new Account(name);
             AccountList.ListOfAllAccounts.Add(Account);
@@ -37,101 +59,148 @@ namespace StepCoin.User
             BlockChain = new BlockChain();
             Miner = new Miner(BlockChain, Account.PublicAddress);
 
-            if (baseNode != null)
-                SubscribeToEvents(baseNode);
+            //if (baseNode != null)
+            //    SubscribeToEvents(baseNode);
         }
+        
+        public void NotifyAboutPendingElements() =>
+                Observer.PendingElementsNotification(PendingConfirmElements.ToList());
 
-        private void SubscribeToEvents(Node baseNode)
-        {
-            baseNode.PendingConfirmElements.CollectionChanged += PendingConfirmElements_CollectionChanged;
-            baseNode.BlockChain.Chain.CollectionChanged += Chain_CollectionChanged;
-        }
+        public void NotifyAboutBlocks() =>
+                Observer.BlockNotification(BlockChain.Chain.ToList());
 
-        private void PendingConfirmElements_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        #region OldVersionNotification
+        //private void SubscribeToEvents(Node baseNode)
+        //{
+        //    baseNode.PendingConfirmElements.CollectionChanged += PendingConfirmElements_CollectionChanged;
+        //    baseNode.BlockChain.Chain.CollectionChanged += Chain_CollectionChanged;
+        //}
+
+        //private void PendingConfirmElements_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        //{
+        //    if (e.Action == NotifyCollectionChangedAction.Add)
+        //    {
+        //        foreach (var item in e.NewItems)
+        //        {
+        //            var newItem = item as PendingConfirmChainElement;
+        //            if (newItem != null)
+        //            {
+        //                var pendingElementOnList = PendingConfirmElements.FirstOrDefault(pe => pe.Element.Hash == newItem.Element.Hash);
+        //                bool notCntains = pendingElementOnList is null;
+
+
+        //                if (notCntains)
+        //                    pendingElementOnList = newItem.Clone;
+
+        //                if (newItem.Element is Block)
+        //                {
+        //                    pendingElementOnList.Confirmations[Account.PublicAddress] = Validator.IsCanBeAddedToChain(pendingElementOnList.Element as Block, BlockChain);
+        //                }
+        //                else if (newItem.Element is Transaction)
+        //                {
+        //                    pendingElementOnList.Confirmations[Account.PublicAddress] = TransactionsValidator.IsValidTransaction(pendingElementOnList.Element as Transaction,
+        //                        BlockChain.TransactionsOnChain
+        //                        .Union(Miner.PendingToMineTransactions)
+        //                        .Union(PendingConfirmElements.Where(pe => pe.Element is Transaction).Select(pe => pe.Element as Transaction)));
+        //                }
+
+        //                if (notCntains)
+        //                    PendingConfirmElements.Add(pendingElementOnList);
+        //            }
+        //            FoundAndAddConfirmedBlocks();
+        //            FoundAndAddConfirmedTransactions();
+        //        }
+        //    }
+        //}
+
+
+        //private void Chain_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        //{
+        //    if (e.Action == NotifyCollectionChangedAction.Add)
+        //    {
+        //        foreach (var item in e.NewItems)
+        //        {
+        //            var newItem = item as Block;
+        //            if (newItem != null)
+        //            {
+        //                BlockChain.TryAddBlock(newItem);
+        //            }
+        //        }
+        //    }
+        //}
+        #endregion
+
+        internal void TryAddPendingElement(PendingConfirmChainElement newElement)
         {
-            if (e.Action == NotifyCollectionChangedAction.Add)
+            if (newElement != null)
             {
-                foreach (var item in e.NewItems)
+                var pendingElementOnList = PendingConfirmElements.FirstOrDefault(pe => pe.Element.Hash == newElement.Element.Hash);
+                bool notCntains = pendingElementOnList is null;
+
+
+                if (notCntains)
+                    pendingElementOnList = newElement.Clone;
+
+                if (newElement.Element is Block)
                 {
-                    var newItem = item as PendingConfirmChainElement;
-                    if (newItem != null)
-                    {
-                        var pendingElementOnList = PendingConfirmElements.FirstOrDefault(pe => pe.Element.Hash == newItem.Element.Hash);
-                        bool notCntains = pendingElementOnList is null;
-
-
-                        if (notCntains)
-                            pendingElementOnList = newItem.Clone;
-
-                        if (newItem.Element is Block)
-                        {
-                            pendingElementOnList.Confirmations[Account.PublicAddress] = Validator.IsCanBeAddedToChain(pendingElementOnList.Element as Block, BlockChain);
-                        }
-                        else if (newItem.Element is Transaction)
-                        {
-                            pendingElementOnList.Confirmations[Account.PublicAddress] = TransactionsValidator.IsValidTransaction(pendingElementOnList.Element as Transaction,
-                                BlockChain.TransactionsOnChain
-                                .Union(Miner.PendingToMineTransactions)
-                                .Union(PendingConfirmElements.Where(pe => pe.Element is Transaction).Select(pe => pe.Element as Transaction)));
-                        }
-
-                        if (notCntains)
-                            PendingConfirmElements.Add(pendingElementOnList);
-                    }
-                    FoundAndAddConfirmedBlocks();
-                    FoundAndAddConfirmedTransactions();
+                    pendingElementOnList.Confirmations[Account.PublicAddress] = Validator.IsCanBeAddedToChain(pendingElementOnList.Element as Block, BlockChain);
                 }
-                //PendingConfirmBlock block = (sender as ObservableCollection<PendingConfirmBlock>)?.Last();
-                //if (block != null)
-                //{
-                //    block.Confirmations[Account.PublicAddress] = Validator.IsCanBeAddedToChain(block.Block, BlockChain);
-                //    PendingBlocks.Add(block.Clone);
-                //    AddConfirmedBlocks();
-                //}
+                else if (newElement.Element is Transaction)
+                {
+                    pendingElementOnList.Confirmations[Account.PublicAddress] = TransactionsValidator.IsValidTransaction(pendingElementOnList.Element as Transaction,
+                        BlockChain.TransactionsOnChain
+                        .Union(Miner.PendingToMineTransactions)
+                        .Union(PendingConfirmElements.Where(pe => pe.Element is Transaction).Select(pe => pe.Element as Transaction)));
+                }
+
+                if (notCntains)
+                {
+                    PendingConfirmElements.Add(pendingElementOnList);
+                    NotifyAboutPendingElements();
+                }
             }
         }
 
-        private void FoundAndAddConfirmedBlocks()
+        internal void TryAddBlock(Block newBlock)
         {
-            foreach (var block in Validator.ConfirmedBlocks(PendingConfirmElements))
+            if (newBlock != null)
+            {
+                BlockChain.TryAddBlock(newBlock);
+                NotifyAboutBlocks();
+            }
+        }
+
+        public IEnumerable<Block> FoundConfirmedBlocks() => Validator.ConfirmedBlocks(PendingConfirmElements);
+        public void FoundAndAddConfirmedBlocks()
+        {
+            var blocks = FoundConfirmedBlocks();
+            foreach (var block in blocks)
             {
                 BlockChain.TryAddBlock(block);
                 PendingConfirmElements.Remove(PendingConfirmElements.FirstOrDefault(pe => pe.Element == block));
             }
         }
 
-        private void FoundAndAddConfirmedTransactions()
+        IEnumerable<Transaction> FoundConfirmedTransactions() => TransactionsValidator.ConfirmedTransactions(PendingConfirmElements);
+        public void FoundAndAddConfirmedTransactions()
         {
-            foreach (var transaction in TransactionsValidator.ConfirmedTransactions(PendingConfirmElements))
+            foreach (var transaction in FoundConfirmedTransactions().ToList())
             {
                 Miner.TryAddNewTransaction(transaction);
                 PendingConfirmElements.Remove(PendingConfirmElements.FirstOrDefault(pe => pe.Element == transaction));
             }
         }
 
-        private void Chain_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.Action == NotifyCollectionChangedAction.Add)
-            {
-                foreach (var item in e.NewItems)
-                {
-                    var newItem = item as Block;
-                    if (newItem != null)
-                    {
-                        BlockChain.TryAddBlock(newItem);
-                    }
-                }
-            }
-        }
 
-        public void GenerateNewTransaction(HashCode sender, HashCode recipient, decimal amount)
+
+        public void GenerateNewTransaction(HashCode recipient, decimal amount)
         {
             Random r = new Random();
-            var newTransaction = new Transaction(sender, recipient, amount, BlockChain.TransactionsOnChain.Count);
+            var newTransaction = new Transaction(Account.PublicAddress, recipient, amount, BlockChain.TransactionsOnChain.Count);
             Logger.Instance.LogMessage($"{Account.PublicAddress} generate new transaction\r\n{newTransaction}\r\n{newTransaction.Hash}");
 
             PendingConfirmElements.Add(new PendingConfirmChainElement(newTransaction));
-
         }
+
     }
 }
