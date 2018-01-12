@@ -12,12 +12,15 @@ namespace StepCoin.BlockChainClasses
         public Dictionary<HashCode, bool> Confirmations { get; set; } = new Dictionary<HashCode, bool>();
         public DateTime PendingStartTime { get; private set; }
 
-        public PendingConfirmChainElement(ChainElememnt elememnt) { PendingStartTime = DateTime.Now; Element = elememnt.Clone; }
+        public PendingConfirmChainElement(ChainElememnt elememnt) { PendingStartTime = DateTime.Now; Element = elememnt.GetClone(); }
 
-        public PendingConfirmChainElement Clone => new PendingConfirmChainElement(Element.Clone)
+        public PendingConfirmChainElement GetClone()
         {
-            Confirmations = Confirmations.ToDictionary(k => k.Key.Clone, v => v.Value),
-            PendingStartTime = PendingStartTime
-        };
+            return new PendingConfirmChainElement(Element.GetClone())
+            {
+                Confirmations = Confirmations.ToDictionary(k => k.Key.Clone, v => v.Value),
+                PendingStartTime = PendingStartTime
+            };
+        }
     }
 }

@@ -6,8 +6,8 @@ namespace StepCoin.BlockChainClasses
     {
         public int Id { get; protected set; }
         public HashCode Hash { get; protected set; }
-        public abstract ChainElememnt Clone { get; }
 
+        public abstract ChainElememnt GetClone();
 
         public abstract HashCode CalculateHash();
     }

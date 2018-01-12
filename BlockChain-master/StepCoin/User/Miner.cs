@@ -11,7 +11,7 @@ namespace StepCoin.User
     {
         internal HashCode PublicAddress { get; set; }
         private BlockChain _blockChain;
-        public IEnumerable<Transaction> PendingToMineTransactions { get => _pendingToMineTransactions.Select(t => t.Clone as Transaction); }
+        public IEnumerable<Transaction> PendingToMineTransactions { get => _pendingToMineTransactions.Select(t => t.GetClone() as Transaction); }
         private List<Transaction> _pendingToMineTransactions = new List<Transaction>();
 
         private bool isMining;

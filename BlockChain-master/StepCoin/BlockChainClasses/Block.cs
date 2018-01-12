@@ -12,8 +12,12 @@ namespace StepCoin.BlockChainClasses
         public HashCode PrevHash { get; private set; }
         public int Difficulty { get; private set; }
         public int Nonce { get; private set; }
-        public IEnumerable<Transaction> Transactions { get => _transactions.Select(t => t.Clone as Transaction); internal set => _transactions = value.ToList(); }
-        public override ChainElememnt Clone => new Block(PrevHash, Id) { Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner?.Clone, _timestamp = _timestamp };
+        public IEnumerable<Transaction> Transactions { get => _transactions.Select(t => t.GetClone() as Transaction); internal set => _transactions = value.ToList(); }
+
+        public override ChainElememnt GetClone()
+        {
+            return new Block(PrevHash, Id) { Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner?.Clone, _timestamp = _timestamp };
+        }
 
         private List<Transaction> _transactions = new List<Transaction>();
         private HashCode _miner;//адрес эккаунта майнера, на который переведется вознаграждение   
