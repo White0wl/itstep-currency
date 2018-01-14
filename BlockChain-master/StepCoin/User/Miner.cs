@@ -18,7 +18,7 @@ namespace StepCoin.User
 
         public bool TryAddNewTransaction(Transaction transaction)
         {
-            bool result = TransactionsValidator.IsValidTransaction(transaction, _blockChain.TransactionsOnChain.Union(PendingToMineTransactions));
+            bool result = TransactionsValidator.IsValidTransaction(transaction, _blockChain.TransactionsOnChain.Union(PendingToMineTransactions)) && Configurations.CountTransactionsToBlock > _pendingToMineTransactions.Count;
             if (result)
                 _pendingToMineTransactions.Add(transaction);
             return result;

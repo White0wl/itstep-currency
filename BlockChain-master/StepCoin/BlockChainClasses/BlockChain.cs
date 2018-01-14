@@ -2,6 +2,7 @@
 using StepCoin.Hash;
 using StepCoin.Validators;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -10,7 +11,8 @@ namespace StepCoin.BlockChainClasses
 {
     public class BlockChain
     {
-        internal ObservableCollection<Block> Chain { get; } = new ObservableCollection<Block>();
+        public IEnumerable<Block> Blocks { get => Chain.Select(b => b.GetClone() as Block); }
+        internal List<Block> Chain { get; } = new List<Block>();
         public List<Transaction> TransactionsOnChain => Chain.Aggregate(new List<Transaction>(), AggregateTransactions);//Получение всех транзакций из блоков
 
         private List<Transaction> AggregateTransactions(List<Transaction> list, Block block)//Метод для накопления транзакций их блоков в один лист
@@ -32,7 +34,7 @@ namespace StepCoin.BlockChainClasses
         /// <param name="newBlock"></param>
         public bool TryAddBlock(Block newBlock)
         {
-            bool result = Validator.IsCanBeAddedToChain(newBlock, this);
+            bool result = Validator.IsCanBeAddedToChain(newBlock, Chain.Last());
             if (result)
             {
                 Chain.Add(newBlock);

@@ -17,10 +17,13 @@ namespace StepCoin.Validators
         /// ??? это будет сделано после того, как решим, как производить отсечку pending transactions
         /// </summary>
         /// <returns></returns>
-        public static bool IsCanBeAddedToChain(Block newBlock, BlockChain blockChain) =>
-            blockChain.LastBlock().Hash == newBlock.PrevHash &&
-            HashCode.IsNullOrWhiteSpace(newBlock.Hash) ? false :
-            newBlock.Hash.ToString().Substring(0, Configurations.ActualDifficulty) == new string('0', Configurations.ActualDifficulty);
+        public static bool IsCanBeAddedToChain(Block newBlock, Block lastBlock)
+        {
+            if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
+
+            return lastBlock.Hash == newBlock.PrevHash && 
+                newBlock.Hash.ToString().Substring(0, Configurations.ActualDifficulty) == new string('0', Configurations.ActualDifficulty);
+        }
 
         /// <summary>
         /// Проверка корректности блок-чейна:
@@ -32,10 +35,11 @@ namespace StepCoin.Validators
         public static bool IsBlockChainValid(BlockChain blockChain)
         {
             bool result = false;
-            for (int i = 1; i < blockChain.Chain.Count; i++)
+            List<Block> blocks = blockChain.Chain.ToList();
+            for (int i = 1; i < blocks.Count; i++)
             {
-                Block prevBlock = blockChain.Chain[i - 1];
-                Block block = blockChain.Chain[i];
+                Block prevBlock = blocks[i - 1];
+                Block block = blocks[i];
                 result = block.PrevHash == prevBlock.Hash && block.Hash == block.CalculateHash();
                 if (!result) break;
             }

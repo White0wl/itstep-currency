@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace StepCoin.User
 {
@@ -34,18 +35,20 @@ namespace StepCoin.User
         public NodeObserver Observer { get; set; } = new NodeObserver();
 
         //Блоки и транзакции ожидающие подтверждения других пользователей
-        public IEnumerable<PendingConfirmChainElement> PendingConfirmElements { get { return _pendingConfirmElements.Select(pe => pe.GetClone()); } }
+        public List<PendingConfirmChainElement> PendingConfirmElements { get { return _pendingConfirmElements; } }
         private List<PendingConfirmChainElement> _pendingConfirmElements = new List<PendingConfirmChainElement>();
-
-        public async void StartMineAsync()
+        public bool IsCanStartMine { get => Miner.PendingToMineTransactions.Count() == Configurations.CountTransactionsToBlock; }
+        public bool StartMineAsync()
         {
-            if (Miner.PendingToMineTransactions.Count() > 0)
+            if (IsCanStartMine)
             {
                 Logger.Instance.LogMessage($"{Account.PublicAddress} start mining");
-                Block newBlock = await Miner.StartMineBlock();
+                Block newBlock = Miner.StartMineBlock().Result;
                 Logger.Instance.LogMessage($"{Account.PublicAddress} finished mining {newBlock.Hash}");
                 AddOrChangePendingElement(new PendingConfirmChainElement(newBlock));
+                return true;
             }
+            return false;
         }
 
         public Node(string name)
@@ -143,7 +146,7 @@ namespace StepCoin.User
                 }
                 else
                 {
-                    foreach (var confirmation in element.Confirmations.Where(c=>c.Key!=Account.PublicAddress))
+                    foreach (var confirmation in element.Confirmations.Where(c => c.Key != Account.PublicAddress))
                     {
                         pendingElementOnList.Confirmations[confirmation.Key] = confirmation.Value;
                     }
@@ -183,7 +186,12 @@ namespace StepCoin.User
             if (pendingElement is null) return;
             _pendingConfirmElements.Add(pendingElement);
             pendingElement.Confirmations[Account.PublicAddress] = IsConfirm(pendingElement);
-            NotifyAboutPendingElement(pendingElement);
+            //if (pendingElement.Element is Block && pendingElement.Confirmations.Where(pe => pe.Value).Count() >= Configurations.BlockCountConfirmations)
+            //{
+            //    AddBlock(pendingElement.Element as Block);
+            //}
+            //else
+                NotifyAboutPendingElement(pendingElement);
         }
 
         private bool IsConfirm(PendingConfirmChainElement pendingConfirmChainElement)
@@ -191,7 +199,8 @@ namespace StepCoin.User
             bool result = false;
             if (pendingConfirmChainElement.Element is Block)
             {
-                result = Validator.IsCanBeAddedToChain(pendingConfirmChainElement.Element as Block, BlockChain);
+                //Logger.Instance.LogMessage($"{(pendingConfirmChainElement.Element as Block).Hash} added to confirm {Account.PublicAddress}");
+                result = Validator.IsCanBeAddedToChain(pendingConfirmChainElement.Element as Block, BlockChain.LastBlock());
             }
             else if (pendingConfirmChainElement.Element is Transaction)
             {
@@ -208,19 +217,30 @@ namespace StepCoin.User
             if (newBlock != null)
             {
                 if (BlockChain.TryAddBlock(newBlock))
+                {
+                    var blocksToRemove = _pendingConfirmElements.Where(pe=>pe.Element is Block).Where(pe => (pe.Element as Block).PrevHash == newBlock.PrevHash).ToList();
+                    foreach (var block in blocksToRemove)
+                    {
+                        _pendingConfirmElements.Remove(block);
+                    }
+
+                    Logger.Instance.LogMessage($"{Account.PublicAddress} add block {newBlock.Hash}");
                     NotifyAboutBlock(newBlock);
+                }
             }
         }
 
         public IEnumerable<Block> FoundConfirmedBlocks() => Validator.ConfirmedBlocks(_pendingConfirmElements);
-        public void FoundAndAddConfirmedBlocks()
+        public void FoundAndAddConfirmedBlock()
         {
             var blocks = FoundConfirmedBlocks();
-            foreach (var block in blocks)
-            {
-                AddBlock(block);
-                _pendingConfirmElements.Remove(_pendingConfirmElements.FirstOrDefault(pe => pe.Element == block));
-            }
+            blocks.ToList().Sort((first, second) => first.Timestamp.CompareTo(second.Timestamp));
+            AddBlock(blocks.First());
+            //foreach (var block in blocks)
+            //{
+            //    AddBlock(block);
+            //    _pendingConfirmElements.Remove(_pendingConfirmElements.FirstOrDefault(pe => pe.Element == block));
+            //}
         }
 
         IEnumerable<Transaction> FoundConfirmedTransactions() => TransactionsValidator.ConfirmedTransactions(_pendingConfirmElements);
@@ -228,8 +248,11 @@ namespace StepCoin.User
         {
             foreach (var transaction in FoundConfirmedTransactions().ToList())
             {
-                Miner.TryAddNewTransaction(transaction);
-                _pendingConfirmElements.Remove(_pendingConfirmElements.FirstOrDefault(pe => pe.Element == transaction));
+                if (Miner.TryAddNewTransaction(transaction))
+                {
+                    //Logger.Instance.LogMessage($"{transaction.Hash} added to Miner {Miner.PublicAddress}");
+                    _pendingConfirmElements.Remove(_pendingConfirmElements.FirstOrDefault(pe => pe.Element == transaction));
+                }
             }
         }
 

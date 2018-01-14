@@ -16,13 +16,13 @@ namespace StepCoin.BlockChainClasses
 
         public override ChainElememnt GetClone()
         {
-            return new Block(PrevHash, Id) { Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner?.Clone, _timestamp = _timestamp };
+            return new Block(PrevHash, Id) { Hash = Hash, Nonce = Nonce, _transactions = Transactions.ToList(), Difficulty = Difficulty, _miner = _miner?.Clone, _timestamp = _timestamp };
         }
 
         private List<Transaction> _transactions = new List<Transaction>();
         private HashCode _miner;//адрес эккаунта майнера, на который переведется вознаграждение   
         private DateTime _timestamp;//Время получения хэша
-
+        public DateTime Timestamp { get => _timestamp; }
         public Block(HashCode prevHash, int id)
         {
             PrevHash = prevHash.Clone;

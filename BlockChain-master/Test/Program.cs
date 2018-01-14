@@ -1,6 +1,7 @@
 ﻿using StepCoin;
 using StepCoin.BlockChainClasses;
 using StepCoin.User;
+using StepCoin.Validators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace Test
         private static void RandomTest()
         {
             Random r = new Random(8080);
-            List<Node> nodeList = GenerateNodes(11);
+            List<Node> nodeList = GenerateNodes(3);
 
             //Подписка на изменения BlockChain и PendingConfirmElements
             foreach (var node in nodeList)
@@ -43,11 +44,66 @@ namespace Test
 
             Thread.Sleep(Configurations.TransactionConfirmationTime);//Ожидание распотранения транзакций
 
+            //foreach (var node in nodeList)
+            //{
+            //    //node.FoundAndAddConfirmedTransactions();
+            //    Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Where(pe=>pe.Element is Transaction).Count()}):");
+            //    ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
+            //}
+
+            foreach (var node in nodeList)
+            {
+                node.PendingConfirmElements.Sort((first, second) => first.PendingStartTime.CompareTo(second.PendingStartTime));
+            }
+
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Count()}):");
+                Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Where(pe => pe.Element is Transaction).Count()}):");
                 ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
+            }
+            //Console.ReadLine();
+
+            List<Task<bool>> tasks = new List<Task<bool>>();
+            foreach (var item in nodeList)
+            {
+                item.FoundAndAddConfirmedTransactions();
+                Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanStartMine}");
+                if (item.IsCanStartMine)
+                {
+                    tasks.Add(new Task<bool>(new Func<bool>(() =>
+   {
+       return item.StartMineAsync();
+   })));
+                }
+            }
+
+            foreach (var task in tasks)
+            {
+                task.Start();
+            }
+            while (tasks.Where(t => t.IsCompleted).Count() < tasks.Count) { }
+            nodeList[0].FoundAndAddConfirmedBlock();
+            foreach (var node in nodeList)
+            {
+                //node.FoundAndAddConfirmedTransactions();
+                Console.WriteLine($"{node.Account.PublicAddress} pending block ({node.PendingConfirmElements.Where(pe => pe.Element is Block).Count()}):");
+                ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Block));
+            }
+
+            foreach (var node in nodeList)
+            {
+                Console.WriteLine($"Block chain {node.Account.PublicAddress}");
+                var transactions = node.BlockChain.TransactionsOnChain;
+
+                decimal amountRecieved = TransactionsValidator.RecipentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                decimal amountSent = TransactionsValidator.SenderTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                Console.WriteLine($"Balance : {amountRecieved - amountSent + Configurations.StartBalance}$");
+                foreach (var block in node.BlockChain.Blocks)
+                {
+                    Console.WriteLine(block);
+                }
+                Console.WriteLine();
             }
         }
 
