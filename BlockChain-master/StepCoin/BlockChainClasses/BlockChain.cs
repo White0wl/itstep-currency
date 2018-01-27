@@ -1,21 +1,18 @@
-﻿using LoggerLibrary;
+﻿using StepCoin.BaseClasses;
 using StepCoin.Hash;
 using StepCoin.Validators;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace StepCoin.BlockChainClasses
 {
-    public class BlockChain
+    public class BlockChain : IBlockChain
     {
-        public IEnumerable<Block> Blocks { get => Chain.Select(b => b.GetClone() as Block); }
-        internal List<Block> Chain { get; } = new List<Block>();
-        public List<Transaction> TransactionsOnChain => Chain.Aggregate(new List<Transaction>(), AggregateTransactions);//Получение всех транзакций из блоков
+        public IEnumerable<IBlock> Blocks { get => _chain.Select(b => b.Clone() as IBlock); }
+        private List<IBlock> _chain = new List<IBlock>();
+        public IEnumerable<ITransaction> TransactionsOnBlocks => _chain.Aggregate(new List<ITransaction>(), AggregateTransactions);//Получение всех транзакций из блоков
 
-        private List<Transaction> AggregateTransactions(List<Transaction> list, Block block)//Метод для накопления транзакций их блоков в один лист
+        private List<ITransaction> AggregateTransactions(List<ITransaction> list, IBlock block)//Метод для накопления транзакций их блоков в один лист
         {
             list.AddRange(block.Transactions);
             return list;
@@ -23,29 +20,24 @@ namespace StepCoin.BlockChainClasses
 
         public BlockChain()
         {
-            Chain.Add(BlockZero);
+            _chain.Add(BlockZero);
         }
 
-        private Block BlockZero => new Block(new HashCode(new string('0', Configurations.ActualDifficulty)), new HashCode(new string('0', Configurations.ActualDifficulty)), Chain.Count);
+        private IBlock BlockZero => new Block(new HashCode(new string('0', BlockChainConfigurations.ActualDifficulty)), _chain.Count) { Hash = new HashCode(new string('0', BlockChainConfigurations.ActualDifficulty)) };
 
         /// <summary>
         /// Метод проверяет и добавляет блок в BlockChain новый Block
         /// </summary>
         /// <param name="newBlock"></param>
-        public bool TryAddBlock(Block newBlock)
+        public bool TryAddBlock(IBlock newBlock)
         {
-            bool result = Validator.IsCanBeAddedToChain(newBlock, Chain.Last());
+            bool result = Validator.IsCanBeAddedToChain(newBlock, _chain.Last());
             if (result)
             {
-                Chain.Add(newBlock);
+                _chain.Add(newBlock);
             }
 
             return result;
         }
-
-
-        public Block LastBlock() => Chain.Last();
-        public Block FirstBlock() => Chain.First();
-
     }
 }

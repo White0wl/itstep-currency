@@ -6,11 +6,24 @@ namespace StepCoin.Hash
     {
         public string Code { get; }
 
-        public override bool Equals(object obj) => (obj as HashCode) is null ? false : Code == (obj as HashCode).Code;
+        public override bool Equals(object obj)
+        {
+            if ((obj as HashCode) is null)
+                return false;
+            return Code == (obj as HashCode).Code;
+        }
 
-        public static bool operator ==(HashCode first, HashCode second) => first is null ? false : first.Equals(second);
+        public static bool operator ==(HashCode first, HashCode second)
+        {
+            if (first is null) return false;
+            return first.Equals(second);
+        }
 
-        public static bool operator !=(HashCode first, HashCode second) => first is null ? false : !first.Equals(second);
+        public static bool operator !=(HashCode first, HashCode second)
+        {
+            if (first is null) return false;
+            return !first.Equals(second);
+        }
 
         public override string ToString() => Code;
 
@@ -20,13 +33,18 @@ namespace StepCoin.Hash
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Code);
             return hashCode;
         }
-
-        public virtual HashCode Clone => new HashCode(Code);
-
-        public HashCode() { }
+        /// <summary>
+        /// Клонирует хэш-объект
+        /// </summary>
+        /// <returns></returns>
+        public virtual HashCode Clone() => new HashCode(Code);
 
         public HashCode(string code) => Code = code;
 
-        public static bool IsNullOrWhiteSpace(HashCode hash) => hash is null ? false : string.IsNullOrWhiteSpace(hash.Code);
+        public static bool IsNullOrWhiteSpace(HashCode hash)
+        {
+            if (hash is null) return true;
+            return string.IsNullOrWhiteSpace(hash.Code);
+        }
     }
 }

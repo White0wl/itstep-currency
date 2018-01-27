@@ -40,11 +40,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseClasses\IAccount.cs" />
+    <Compile Include="BaseClasses\IBlock.cs" />
+    <Compile Include="BaseClasses\IBlockChain.cs" />
+    <Compile Include="BaseClasses\IChainElement.cs" />
+    <Compile Include="BaseClasses\ITransaction.cs" />
     <Compile Include="BlockChainClasses\Block.cs" />
     <Compile Include="BlockChainClasses\BlockChain.cs" />
-    <Compile Include="BlockChainClasses\ChainElememnt.cs" />
-    <Compile Include="Configurations.cs" />
-    <Compile Include="Extensions\DateTimeExtension.cs" />
+    <Compile Include="BlockChainConfigurations.cs" />
     <Compile Include="Hash\HashCode.cs" />
     <Compile Include="Hash\HashGenerator.cs" />
     <Compile Include="BlockChainClasses\PendingConfirmChainElement.cs" />

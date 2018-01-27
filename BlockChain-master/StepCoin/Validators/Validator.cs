@@ -1,4 +1,5 @@
-﻿using StepCoin.BlockChainClasses;
+﻿using StepCoin.BaseClasses;
+using StepCoin.BlockChainClasses;
 using StepCoin.Hash;
 using System;
 using System.Collections.Generic;
@@ -17,12 +18,12 @@ namespace StepCoin.Validators
         /// ??? это будет сделано после того, как решим, как производить отсечку pending transactions
         /// </summary>
         /// <returns></returns>
-        public static bool IsCanBeAddedToChain(Block newBlock, Block lastBlock)
+        public static bool IsCanBeAddedToChain(IBlock newBlock, IBlock lastBlock)
         {
             if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
 
-            return lastBlock.Hash == newBlock.PrevHash && 
-                newBlock.Hash.ToString().Substring(0, Configurations.ActualDifficulty) == new string('0', Configurations.ActualDifficulty);
+            return lastBlock.Hash == newBlock.PrevHash &&
+                newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty);
         }
 
         /// <summary>
@@ -35,39 +36,24 @@ namespace StepCoin.Validators
         public static bool IsBlockChainValid(BlockChain blockChain)
         {
             bool result = false;
-            List<Block> blocks = blockChain.Chain.ToList();
-            for (int i = 1; i < blocks.Count; i++)
+            var blocks = blockChain.Blocks.ToArray();
+            for (int i = 1; i < blocks.Length; i++)
             {
-                Block prevBlock = blocks[i - 1];
-                Block block = blocks[i];
+                IBlock prevBlock = blocks[i - 1];
+                IBlock block = blocks[i];
                 result = block.PrevHash == prevBlock.Hash && block.Hash == block.CalculateHash();
                 if (!result) break;
             }
             return result;
         }
 
-        public static IEnumerable<Block> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) =>
-    pendingConfirmElements
-    .Where(pe => pe.Element is Block)//Нахождение всех ожидающих блоков, исключая транзакции
-    .Where(pe => pe.Confirmations.Where(c => c.Value).Count() >= Configurations.BlockCountConfirmations)//Проверка кол.подтверждений
-    .Where(pe => (DateTime.Now - pe.PendingStartTime) >= Configurations.BlockConfirmationTime)//Проверка времени распространения
-    .Select(pe => pe.Element as Block);
-
-        /// <summary>
-        /// Добавление нового блока с валидацией его.
-        /// Нужно еще добавить здесь формирование транзакции с премией автору блока
-        /// и добавлением этой транзакции в список pending transactions. 
-        /// Будет реализовано, когда определимся как и когда опустошается список pending transactions
-        /// </summary>
-
-        //Добавление и предварительная проверка в BlockChain
-
-        //public static void AddNewBlock(Block newBlock, ChainBlocks.BlockChain blockChain)
-        //{
-        //    if (IsCanBeAddedToChain(newBlock, blockChain) && IsBlockChainValid(blockChain))
-        //    {
-        //        blockChain.AddBlock(newBlock);
-        //    }
-        //}
+        public static IEnumerable<IBlock> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements)
+        {
+            return pendingConfirmElements
+.Where(pe => pe.Element is IBlock)//Нахождение всех ожидающих блоков, исключая транзакции
+.Where(pe => pe.Confirmations.Where(c => c.Value).Count() >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
+.Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
+.Select(cb => cb.Element as IBlock);
+        }        
     }
 }

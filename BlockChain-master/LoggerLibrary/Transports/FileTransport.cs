@@ -1,5 +1,4 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using System.IO;
 using System.Text;
 
@@ -14,7 +13,7 @@ namespace LoggerLibrary.Transports
             {
                 path = ConfigurationManager.AppSettings["logPath"];
             }
-            catch (Exception e)
+            catch
             {
                 path = "log.log";
             }

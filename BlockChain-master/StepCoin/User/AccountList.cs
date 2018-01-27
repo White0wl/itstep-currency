@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using StepCoin.BaseClasses;
+using System;
 using System.Collections.ObjectModel;
 
 namespace StepCoin.User
 {
     public static class AccountList
     {
-        public static ObservableCollection<Account> ListOfAllAccounts { get; set; } = new ObservableCollection<Account>();
+        public static ObservableCollection<IAccount> ListOfAllAccounts { get;  } = new ObservableCollection<IAccount>();
 
         static AccountList()
         {
@@ -15,8 +15,8 @@ namespace StepCoin.User
 
         private static void ListOfAllAccounts_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
-            Configurations.TransactionCountConfirmations = Convert.ToInt32(ListOfAllAccounts.Count * 0.5);
-            Configurations.BlockCountConfirmations = Convert.ToInt32(ListOfAllAccounts.Count * 0.5);
+            BlockChainConfigurations.TransactionCountConfirmations = Convert.ToInt32(ListOfAllAccounts.Count * 0.5);
+            BlockChainConfigurations.BlockCountConfirmations = Convert.ToInt32(ListOfAllAccounts.Count * 0.5);
         }
 
         //public void DepositeWithdraw(Transaction transaction)

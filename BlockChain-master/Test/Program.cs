@@ -21,7 +21,7 @@ namespace Test
         private static void RandomTest()
         {
             Random r = new Random(8080);
-            List<Node> nodeList = GenerateNodes(3);
+            List<Node> nodeList = GenerateNodes(10);
 
             //Подписка на изменения BlockChain и PendingConfirmElements
             foreach (var node in nodeList)
@@ -42,7 +42,7 @@ namespace Test
                 nodeList[r.Next(nodeList.Count)].GenerateNewTransaction(nodeList[r.Next(nodeList.Count)].Account.PublicAddress, r.Next(10, 50));
             }
 
-            Thread.Sleep(Configurations.TransactionConfirmationTime);//Ожидание распотранения транзакций
+            Thread.Sleep(BlockChainConfigurations.TransactionConfirmationTime);//Ожидание распотранения транзакций
 
             //foreach (var node in nodeList)
             //{
@@ -51,10 +51,6 @@ namespace Test
             //    ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
             //}
 
-            foreach (var node in nodeList)
-            {
-                node.PendingConfirmElements.Sort((first, second) => first.PendingStartTime.CompareTo(second.PendingStartTime));
-            }
 
             foreach (var node in nodeList)
             {
@@ -68,22 +64,18 @@ namespace Test
             foreach (var item in nodeList)
             {
                 item.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanStartMine}");
-                if (item.IsCanStartMine)
-                {
-                    tasks.Add(new Task<bool>(new Func<bool>(() =>
-   {
-       return item.StartMineAsync();
-   })));
-                }
+                Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanMine}");
+                tasks.Add(new Task<bool>(new Func<bool>(() => { item.StartMine(); return true; })));
             }
 
             foreach (var task in tasks)
             {
                 task.Start();
+                Thread.Sleep(100);
             }
-            while (tasks.Where(t => t.IsCompleted).Count() < tasks.Count) { }
-            nodeList[0].FoundAndAddConfirmedBlock();
+
+            while (tasks.Where(t => t.IsCompleted).Count() != tasks.Count()) { }
+
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
@@ -94,15 +86,15 @@ namespace Test
             foreach (var node in nodeList)
             {
                 Console.WriteLine($"Block chain {node.Account.PublicAddress}");
-                var transactions = node.BlockChain.TransactionsOnChain;
+                var transactions = node.BlockChain.TransactionsOnBlocks;
 
-                decimal amountRecieved = TransactionsValidator.RecipentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
-                decimal amountSent = TransactionsValidator.SenderTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
-                Console.WriteLine($"Balance : {amountRecieved - amountSent + Configurations.StartBalance}$");
-                foreach (var block in node.BlockChain.Blocks)
-                {
-                    Console.WriteLine(block);
-                }
+                decimal amountRecieved = TransactionsValidator.ReceivedTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                decimal amountSent = TransactionsValidator.SentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                Console.WriteLine($"Balance : {amountRecieved - amountSent + BlockChainConfigurations.StartBalance}$");
+                //foreach (var block in node.BlockChain.Blocks)
+                //{
+                //    Console.WriteLine(block);
+                //}
                 Console.WriteLine();
             }
         }

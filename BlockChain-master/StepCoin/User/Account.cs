@@ -1,5 +1,5 @@
-﻿using StepCoin.Hash;
-using System.Security.Cryptography;
+﻿using StepCoin.BaseClasses;
+using StepCoin.Hash;
 using System.Text;
 
 namespace StepCoin.User
@@ -12,16 +12,16 @@ namespace StepCoin.User
     /// Класс имеет список всех исходящих и входящих транзакций и метод, который вычисляет баланс
     /// по истории всех транзакций
     /// </summary>
-    public class Account
+    public class Account : IAccount
     {
-        public HashCode PublicAddress { get; set; }//Address
-        public HashCode Password { get; set; }//SecretKey
+        public HashCode PublicAddress { get; private set; }//Address
+        public HashCode Password { get; private set; }//SecretKey
 
         public Account(string name)
         {
             int id = AccountList.ListOfAllAccounts.Count;
-            PublicAddress = new HashCode(HashGenerator.GenerateString(MD5.Create(),Encoding.Unicode.GetBytes(name)));
-            Password = new HashCode(HashGenerator.GenerateString(MD5.Create(), Encoding.Unicode.GetBytes(PublicAddress.Code)));
+            PublicAddress = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes(name)));
+            Password = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmSecretHashAccout, Encoding.Unicode.GetBytes(PublicAddress.Code)));
         }
     }
 }
