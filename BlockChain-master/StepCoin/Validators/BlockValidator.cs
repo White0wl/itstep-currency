@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace StepCoin.Validators
 {
-    public static class Validator
+    public static class BlockValidator
     {
 
         /// <summary>
@@ -33,10 +33,10 @@ namespace StepCoin.Validators
         /// Сверяем, равен ли PreviousHash каждого блока хэшу предыдущего.
         /// </summary>
         /// <returns></returns>
-        public static bool IsBlockChainValid(BlockChain blockChain)
+        public static bool IsBlockChainValid(params IBlock[] blocks)
         {
             bool result = false;
-            var blocks = blockChain.Blocks.ToArray();
+            if (blocks.Length < 2) throw new ArgumentException("Передано меньше двух елементов цепи");
             for (int i = 1; i < blocks.Length; i++)
             {
                 IBlock prevBlock = blocks[i - 1];
@@ -54,6 +54,6 @@ namespace StepCoin.Validators
 .Where(pe => pe.Confirmations.Where(c => c.Value).Count() >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
 .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
 .Select(cb => cb.Element as IBlock);
-        }        
+        }
     }
 }

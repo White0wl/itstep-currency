@@ -31,7 +31,7 @@ namespace StepCoin.BlockChainClasses
         /// <param name="newBlock"></param>
         public bool TryAddBlock(IBlock newBlock)
         {
-            bool result = Validator.IsCanBeAddedToChain(newBlock, _chain.Last());
+            bool result = BlockValidator.IsCanBeAddedToChain(newBlock, _chain.Last());
             if (result)
             {
                 _chain.Add(newBlock);

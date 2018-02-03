@@ -88,8 +88,8 @@ namespace Test
                 Console.WriteLine($"Block chain {node.Account.PublicAddress}");
                 var transactions = node.BlockChain.TransactionsOnBlocks;
 
-                decimal amountRecieved = TransactionsValidator.ReceivedTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
-                decimal amountSent = TransactionsValidator.SentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                decimal amountRecieved = TransactionValidator.ReceivedTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                decimal amountSent = TransactionValidator.SentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
                 Console.WriteLine($"Balance : {amountRecieved - amountSent + BlockChainConfigurations.StartBalance}$");
                 //foreach (var block in node.BlockChain.Blocks)
                 //{

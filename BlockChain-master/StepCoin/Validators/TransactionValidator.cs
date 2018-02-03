@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace StepCoin.Validators
 {
-    public static class TransactionsValidator
+    public static class TransactionValidator
     {
         public static bool IsValidTransaction(ITransaction someTransaction, IEnumerable<ITransaction> transactions)
         {

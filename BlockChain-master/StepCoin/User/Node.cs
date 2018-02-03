@@ -170,12 +170,12 @@ namespace StepCoin.User
             if (pendingChainElement is IBlock)
             {
                 //Logger.Instance.LogMessage($"{(pendingConfirmChainElement.Element as Block).Hash} added to confirm {Account.PublicAddress}");
-                result = Validator.IsCanBeAddedToChain(pendingChainElement as IBlock, BlockChain.Blocks.Last());
+                result = BlockValidator.IsCanBeAddedToChain(pendingChainElement as IBlock, BlockChain.Blocks.Last());
                 ;
             }
             else if (pendingChainElement is ITransaction)
             {
-                result = TransactionsValidator.IsValidTransaction(pendingChainElement as ITransaction,
+                result = TransactionValidator.IsValidTransaction(pendingChainElement as ITransaction,
                     BlockChain.TransactionsOnBlocks
                     .Union(BroadcastTransactions)
                     .Union(FoundConfirmedTransactions().Where(t => t.Hash != (pendingChainElement as ITransaction).Hash)));
@@ -214,7 +214,7 @@ namespace StepCoin.User
 
         public IBlock FoundConfirmedBlock()
         {
-            var confirmedBlocks = Validator.ConfirmedBlocks(_pendingConfirmElements);
+            var confirmedBlocks = BlockValidator.ConfirmedBlocks(_pendingConfirmElements);
             if (confirmedBlocks.Count() < 1) return null;
             var minTamestamp = confirmedBlocks.Min(b => b.DateOfReceiving);
             return confirmedBlocks.Where(b => b.DateOfReceiving == minTamestamp).FirstOrDefault();
@@ -222,7 +222,7 @@ namespace StepCoin.User
 
         public void FoundAndAddConfirmedBlock() => AddBlock(FoundConfirmedBlock());
 
-        private IEnumerable<ITransaction> FoundConfirmedTransactions() => TransactionsValidator.ConfirmedTransactions(_pendingConfirmElements);
+        private IEnumerable<ITransaction> FoundConfirmedTransactions() => TransactionValidator.ConfirmedTransactions(_pendingConfirmElements);
 
         public void FoundAndAddConfirmedTransactions()
         {
