@@ -20,8 +20,10 @@ namespace StepCoin.Validators
         /// <returns></returns>
         public static bool IsCanBeAddedToChain(BaseBlock newBlock, BaseBlock lastBlock)
         {
-            if (newBlock is null || HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
+            if (newBlock is null) throw new ArgumentNullException(nameof(newBlock));
+            if (lastBlock is null) throw new ArgumentNullException(nameof(lastBlock));
 
+            if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
             return lastBlock.Hash == newBlock.PrevHash &&
                 newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty);
         }
@@ -36,7 +38,7 @@ namespace StepCoin.Validators
         public static bool IsBlockChainValid(params BaseBlock[] blocks)
         {
             var result = false;
-            if (blocks.Length < 2) throw new ArgumentException("Less than 2 items transferred");
+            if (blocks.Length < 2) throw new ArgumentException($"Less than 2 items transferred in {nameof(blocks)}");
             for (var i = 1; i < blocks.Length; i++)
             {
                 var prevBlock = blocks[i - 1];
