@@ -31,7 +31,7 @@ namespace StepCoin.BlockChainClasses
         }
 
         public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmBlockHash,
-                Encoding.Unicode.GetBytes($"{Id}{PrevHash}{String.Join(string.Empty, Transactions.Select(t => t.Hash))}{Nonce}")));
+                Encoding.Unicode.GetBytes($"{Id}{PrevHash}{string.Join(string.Empty, Transactions.Select(t => t.Hash))}{Nonce}")));
 
         internal HashCode CalculateNewHash(int difficulty, HashCode miner)
         {
@@ -50,11 +50,19 @@ namespace StepCoin.BlockChainClasses
                 $"Prev Hash : {PrevHash}\r\n" +
                 $"This Hash : {Hash}\r\n" +
                 $"Date : {_timestamp}\r\n" +
-                $"Transactions : \r\n" +
-                $"{String.Join("\r\n", Transactions.Select(t => t.ToString()))}";
+                "Transactions : \r\n" +
+                $"{string.Join("\r\n", Transactions.Select(t => t.ToString()))}";
         }
 
-        public override BaseChainElement Clone() => new Block(PrevHash, Id) { Hash = Hash, Nonce = Nonce, Transactions = Transactions.Select(t => t.Clone() as BaseTransaction).ToList(), Difficulty = Difficulty, _miner = _miner?.Clone(), _timestamp = _timestamp };
+        public override BaseChainElement Clone() => new Block(PrevHash, Id)
+        {
+            Hash = Hash,
+            Nonce = Nonce,
+            Transactions = Transactions.Select(t => t.Clone() as BaseTransaction).ToList(),
+            Difficulty = Difficulty,
+            _miner = _miner?.Clone(),
+            _timestamp = _timestamp
+        };
     }
 
 

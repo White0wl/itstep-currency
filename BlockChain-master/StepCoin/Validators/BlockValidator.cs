@@ -20,7 +20,7 @@ namespace StepCoin.Validators
         /// <returns></returns>
         public static bool IsCanBeAddedToChain(BaseBlock newBlock, BaseBlock lastBlock)
         {
-            if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
+            if (newBlock is null || HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
 
             return lastBlock.Hash == newBlock.PrevHash &&
                 newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty);
@@ -35,25 +35,22 @@ namespace StepCoin.Validators
         /// <returns></returns>
         public static bool IsBlockChainValid(params BaseBlock[] blocks)
         {
-            bool result = false;
-            if (blocks.Length < 2) throw new ArgumentException("Передано меньше двух елементов цепи");
-            for (int i = 1; i < blocks.Length; i++)
+            var result = false;
+            if (blocks.Length < 2) throw new ArgumentException("Less than 2 items transferred");
+            for (var i = 1; i < blocks.Length; i++)
             {
-                BaseBlock prevBlock = blocks[i - 1];
-                BaseBlock block = blocks[i];
+                var prevBlock = blocks[i - 1];
+                var block = blocks[i];
                 result = block.PrevHash == prevBlock.Hash && block.Hash == block.CalculateHash();
                 if (!result) break;
             }
             return result;
         }
 
-        public static IEnumerable<BaseBlock> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements)
-        {
-            return pendingConfirmElements
-.Where(pe => pe.Element is BaseBlock)//Нахождение всех ожидающих блоков, исключая транзакции
-.Where(pe => pe.Confirmations.Where(c => c.Value).Count() >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
-.Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
-.Select(cb => cb.Element as BaseBlock);
-        }
+        public static IEnumerable<BaseBlock> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) => pendingConfirmElements
+            .Where(pe => pe.Element is BaseBlock)//Нахождение всех ожидающих блоков, исключая транзакции
+            .Where(pe => pe.Confirmations.Count(c => c.Value) >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
+            .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
+            .Select(cb => cb.Element as BaseBlock);
     }
 }

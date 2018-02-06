@@ -14,14 +14,13 @@ namespace StepCoin.User
     /// </summary>
     public class Account : IAccount
     {
-        public HashCode PublicAddress { get; private set; }//Address
-        public HashCode Password { get; private set; }//SecretKey
+        public HashCode PublicAddress { get; }//Address
+        public HashCode Password { get; }//SecretKey
 
-        public Account(string name)
+        public Account(string name, string password)
         {
-            int id = AccountList.ListOfAllAccounts.Count;
             PublicAddress = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes(name)));
-            Password = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmSecretHashAccout, Encoding.Unicode.GetBytes(PublicAddress.Code)));
+            Password = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmSecretHashAccout, Encoding.Unicode.GetBytes(PublicAddress.Code + password)));
         }
     }
 }

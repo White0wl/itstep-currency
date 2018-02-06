@@ -8,16 +8,10 @@ namespace LoggerLibrary.Transports
     {
         public override void SaveLog(string message)
         {
-            string path;
-            try
-            {
-                path = ConfigurationManager.AppSettings["logPath"];
-            }
-            catch
-            {
+            var path = ConfigurationManager.AppSettings["logPath"];
+            if (string.IsNullOrWhiteSpace(path))
                 path = "log.log";
-            }
-            File.AppendAllLines(path, new string[] { message }, Encoding.UTF8);
+            File.AppendAllLines(path, new[] { message }, Encoding.UTF8);
         }
     }
 }

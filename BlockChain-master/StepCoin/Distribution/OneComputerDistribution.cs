@@ -2,6 +2,7 @@
 using System.Linq;
 using StepCoin.BaseClasses;
 using StepCoin.BlockChainClasses;
+using StepCoin.Hash;
 using StepCoin.User;
 
 namespace StepCoin.Distribution
@@ -12,6 +13,7 @@ namespace StepCoin.Distribution
         public event GetBlock BlockNotification;
         public event GetPendingElement PendingElementNotification;
         private readonly List<Node> _subscrubers = new List<Node>();
+        public HashCode ClientCode { get; set; }
 
         public void Subscribe(Node subscriber)
         {
@@ -23,6 +25,7 @@ namespace StepCoin.Distribution
             if (subscriber is null) return;
             _subscrubers.Remove(_subscrubers.FirstOrDefault(s => s.Account.PublicAddress == subscriber.Account.PublicAddress));
         }
+
 
         public void NotifyAboutPendingElement(PendingConfirmChainElement element) => 
             _subscrubers.ForEach(s => s.NotificationPendingElement(element));

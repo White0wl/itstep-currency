@@ -7,34 +7,17 @@ namespace StepCoin.Hash
     public class HashCode
     {
         [DataMember]
-        public string Code { get; internal set; }
-
-        public override bool Equals(object obj)
-        {
-            if ((obj as HashCode) is null)
-                return false;
-            return Code == (obj as HashCode).Code;
-        }
-
-        public static bool operator ==(HashCode first, HashCode second)
-        {
-            if (first is null) return false;
-            return first.Equals(second);
-        }
-
-        public static bool operator !=(HashCode first, HashCode second)
-        {
-            if (first is null) return false;
-            return !first.Equals(second);
-        }
-
+        public string Code { get; private set; }
+        public override bool Equals(object obj) => (obj as HashCode) != null && Code == ((HashCode)obj).Code;
+        public static bool operator ==(HashCode first, HashCode second) => first?.Equals(second) is true;
+        public static bool operator !=(HashCode first, HashCode second) => first?.Equals(second) is false;
         public override string ToString() => Code;
-
         public override int GetHashCode()
         {
-            var hashCode = -1470883279;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Code);
-            return hashCode;
+            var hash = 13;
+            // ReSharper disable once NonReadonlyMemberInGetHashCode
+            hash = (hash * 7) + Code.GetHashCode();
+            return hash;
         }
         /// <summary>
         /// Клонирует хэш-объект
@@ -44,10 +27,6 @@ namespace StepCoin.Hash
 
         public HashCode(string code) => Code = code;
 
-        public static bool IsNullOrWhiteSpace(HashCode hash)
-        {
-            if (hash is null) return true;
-            return string.IsNullOrWhiteSpace(hash.Code);
-        }
+        public static bool IsNullOrWhiteSpace(HashCode hash) => string.IsNullOrWhiteSpace(hash?.Code);
     }
 }

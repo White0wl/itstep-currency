@@ -7,17 +7,14 @@ namespace LoggerLibrary
 {
     public class Logger
     {
-        private static Logger logger;
-        public static Logger Instance
-        {
-            get { if (logger is null) logger = new Logger(); return logger; }
-        }
+        private static Logger _logger;
+        public static Logger Instance => _logger ?? (_logger = new Logger());
         public string Format { get; set; }
         public Transport Transport { get; set; } = new ConsoleTransport();
 
         public void LogMessage(string message, string type = "info", [CallerFilePath]string callerFilePath = "", [CallerLineNumber] int sourceLineNumber = 0)
         {
-            if (String.IsNullOrWhiteSpace(Format))
+            if (string.IsNullOrWhiteSpace(Format))
                 SetDefaultLogFormat();
             lock (this)
             {
@@ -33,17 +30,9 @@ namespace LoggerLibrary
 
         private void SetDefaultLogFormat()
         {
-            try
-            {
-                Format = ConfigurationManager.AppSettings["logFormat"];
-                if (String.IsNullOrWhiteSpace(Format))
-                    throw new Exception();
-            }
-            catch
-            {
-                //[%T] (%D:%t) <%F:%L>:
+            Format = ConfigurationManager.AppSettings["logFormat"];
+            if (string.IsNullOrWhiteSpace(Format))//[%T] (%D:%t) <%F:%L>:
                 Format = "%m";
-            }
         }
     }
 }

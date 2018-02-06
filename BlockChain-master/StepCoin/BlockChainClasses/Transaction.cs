@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 using StepCoin.Hash;
 using StepCoin.BaseClasses;
@@ -12,16 +13,13 @@ namespace StepCoin.BlockChainClasses
         [DataMember]
         public DateTime Timestamp { get; private set; } //время создания
 
-        public override BaseChainElement Clone()
+        public override BaseChainElement Clone() => new Transaction(Sender.Clone(), Recipient.Clone(), Amount, Id)
         {
-            return new Transaction(Sender.Clone(), Recipient.Clone(), Amount, Id)
-            {
-                Timestamp = Timestamp,
-                Hash = CalculateHash()
-            };
-        }
+            Timestamp = Timestamp,
+            Hash = CalculateHash()
+        };
 
-        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmTransactionHash, Encoding.Unicode.GetBytes($"{Id}{Sender}{Recipient}{Amount}{Timestamp}")));
+        public sealed override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmTransactionHash, Encoding.Unicode.GetBytes($"{Id}{Sender}{Recipient}{Amount}{Timestamp}")));
 
         public Transaction(HashCode sender, HashCode recipient, decimal amount, int id)
         {
@@ -33,6 +31,6 @@ namespace StepCoin.BlockChainClasses
             Hash = CalculateHash();
         }
 
-        public override string ToString() => $"[{Timestamp}]{Sender}=>{Recipient}({Amount.ToString()})";
+        public override string ToString() => $"[{Timestamp}]{Sender}=>{Recipient}({Amount.ToString(CultureInfo.InvariantCulture)})";
     }
 }

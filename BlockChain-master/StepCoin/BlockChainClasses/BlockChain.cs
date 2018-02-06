@@ -8,11 +8,11 @@ namespace StepCoin.BlockChainClasses
 {
     public class BlockChain : IBlockChain
     {
-        public IEnumerable<BaseBlock> Blocks { get => _chain.Select(b => b.Clone() as BaseBlock); }
-        private List<BaseBlock> _chain = new List<BaseBlock>();
+        public IEnumerable<BaseBlock> Blocks => _chain.Select(b => b.Clone() as BaseBlock);
+        private readonly List<BaseBlock> _chain = new List<BaseBlock>();
         public IEnumerable<BaseTransaction> TransactionsOnBlocks => _chain.Aggregate(new List<BaseTransaction>(), AggregateTransactions);//Получение всех транзакций из блоков
 
-        private List<BaseTransaction> AggregateTransactions(List<BaseTransaction> list, BaseBlock block)//Метод для накопления транзакций их блоков в один лист
+        private static List<BaseTransaction> AggregateTransactions(List<BaseTransaction> list, BaseBlock block)//Метод для накопления транзакций их блоков в один лист
         {
             list.AddRange(block.Transactions);
             return list;
@@ -31,7 +31,7 @@ namespace StepCoin.BlockChainClasses
         /// <param name="newBlock"></param>
         public bool TryAddBlock(BaseBlock newBlock)
         {
-            bool result = BlockValidator.IsCanBeAddedToChain(newBlock, _chain.Last());
+            var result = BlockValidator.IsCanBeAddedToChain(newBlock, _chain.Last());
             if (result)
             {
                 _chain.Add(newBlock);

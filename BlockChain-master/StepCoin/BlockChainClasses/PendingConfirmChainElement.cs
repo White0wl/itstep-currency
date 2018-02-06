@@ -26,6 +26,6 @@ namespace StepCoin.BlockChainClasses
             PendingStartTime = PendingStartTime
         };
 
-        public int CountConfirm { get => Confirmations.Where(c => c.Value).Count(); }
+        public int CountConfirm => Confirmations.Count(c => c.Value);
     }
 }

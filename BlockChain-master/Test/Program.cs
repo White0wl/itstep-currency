@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Test
 {
-    class Program
+    internal class Program
     {
         static void Main(string[] args)
         {
@@ -21,12 +21,12 @@ namespace Test
 
         private static void RandomTest()
         {
-            Random r = new Random(8080);
-            List<Node> nodeList = GenerateNodes(5);
+            var r = new Random(8080);
+            var nodeList = GenerateNodes(5);
 
             //Генерация транзакций
-            int idx = 0;
-            int count = 20;//кол. генерируемых транзакций
+            var idx = 0;
+            const int count = 20; //кол. генерируемых транзакций
             while (idx++ < count)//Генерация count транзакций
             {
                 Console.Write($"{idx} ");
@@ -46,7 +46,7 @@ namespace Test
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Where(pe => pe.Element is Transaction).Count()}):");
+                Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Count(pe => pe.Element is Transaction)}):");
                 ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
             }
             //Console.ReadLine();
@@ -56,7 +56,7 @@ namespace Test
             {
                 item.FoundAndAddConfirmedTransactions();
                 Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanMine}");
-                tasks.Add(new Task<bool>(new Func<bool>(() => { item.StartMine(); return true; })));
+                tasks.Add(new Task<bool>(() => { item.StartMine(); return true; }));
             }
 
             foreach (var task in tasks)
@@ -65,12 +65,12 @@ namespace Test
                 Thread.Sleep(100);
             }
 
-            while (tasks.Where(t => t.IsCompleted).Count() != tasks.Count()) { }
+            while (tasks.Count(t => t.IsCompleted) != tasks.Count()) { }
 
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{node.Account.PublicAddress} pending block ({node.PendingConfirmElements.Where(pe => pe.Element is Block).Count()}):");
+                Console.WriteLine($"{node.Account.PublicAddress} pending block ({node.PendingConfirmElements.Count(pe => pe.Element is Block)}):");
                 ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Block));
             }
 
@@ -92,13 +92,11 @@ namespace Test
 
         private static List<Node> GenerateNodes(int count)
         {
-            List<Node> nodes = new List<Node>();
-            nodes.Add(new Node("node 0"));
+            var nodes = new List<Node> {new Node("node 0", "pass0")};
             if (count > 1)
-                for (int i = 0; i < count - 1; i++)
+                for (var i = 0; i < count - 1; i++)
                 {
-                    nodes.Add(new Node("node " + (i + 1)));
-
+                    nodes.Add(new Node($"node {(i + 1)}",$"pass{(i + 1)}"));
                 }
 
 
@@ -107,7 +105,7 @@ namespace Test
             {
                 foreach (var item in nodes.Where(n => n != node))
                 {
-                    (node.Distribution as OneComputerDistribution).Subscribe(item);
+                    (node.Distribution as OneComputerDistribution)?.Subscribe(item);
                     //Console.WriteLine($"{item.Account.PublicAddress} subscribe to {node.Account.PublicAddress}");
                 }
             }
@@ -118,7 +116,7 @@ namespace Test
         {
             foreach (var item in enumerable)
             {
-                Console.WriteLine($"{item.Element.Hash} Confirmations: {item.Confirmations.Where(c => c.Value).Count()} Denials: {item.Confirmations.Where(c => !c.Value).Count()}");
+                Console.WriteLine($"{item.Element.Hash} Confirmations: {item.Confirmations.Count(c => c.Value)} Denials: {item.Confirmations.Count(c => !c.Value)}");
             }
         }
     }

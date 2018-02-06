@@ -54,7 +54,7 @@
     <Compile Include="Distribution\IDistribution.cs" />
     <Compile Include="Distribution\IP2PStepCoin.cs" />
     <Compile Include="Distribution\OneComputerDistribution.cs" />
-    <Compile Include="Distribution\PTPDistribution.cs" />
+    <Compile Include="Distribution\P2PDistribution.cs" />
     <Compile Include="Hash\HashCode.cs" />
     <Compile Include="Hash\HashGenerator.cs" />
     <Compile Include="BlockChainClasses\PendingConfirmChainElement.cs" />
