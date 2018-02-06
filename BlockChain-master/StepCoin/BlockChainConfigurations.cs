@@ -6,7 +6,7 @@ namespace StepCoin
     public static class BlockChainConfigurations
     {
         public static int CountTransactionsToBlock { get; set; } = 1;
-        public static int ActualDifficulty { get; set; } = 3;//Актуальная сложность для вычисления хэша
+        public static int ActualDifficulty { get; set; } = 5;//Актуальная сложность для вычисления хэша
         public static int TransactionCountConfirmations { get; set; }//Требуемое количество подтверждений транзакции для добавления в новый блок 
                                                                      //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
 

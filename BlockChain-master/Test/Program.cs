@@ -1,5 +1,6 @@
 ﻿using StepCoin;
 using StepCoin.BlockChainClasses;
+using StepCoin.Distribution;
 using StepCoin.User;
 using StepCoin.Validators;
 using System;
@@ -21,21 +22,11 @@ namespace Test
         private static void RandomTest()
         {
             Random r = new Random(8080);
-            List<Node> nodeList = GenerateNodes(10);
-
-            //Подписка на изменения BlockChain и PendingConfirmElements
-            foreach (var node in nodeList)
-            {
-                foreach (var item in nodeList.Where(n => n != node))
-                {
-                    node.Observer.Subscribe(item);
-                    //Console.WriteLine($"{item.Account.PublicAddress} subscribe to {node.Account.PublicAddress}");
-                }
-            }
+            List<Node> nodeList = GenerateNodes(5);
 
             //Генерация транзакций
             int idx = 0;
-            int count = 10;//кол. генерируемых транзакций
+            int count = 20;//кол. генерируемых транзакций
             while (idx++ < count)//Генерация count транзакций
             {
                 Console.Write($"{idx} ");
@@ -107,7 +98,19 @@ namespace Test
                 for (int i = 0; i < count - 1; i++)
                 {
                     nodes.Add(new Node("node " + (i + 1)));
+
                 }
+
+
+            //Подписка на изменения BlockChain и PendingConfirmElements
+            foreach (var node in nodes)
+            {
+                foreach (var item in nodes.Where(n => n != node))
+                {
+                    (node.Distribution as OneComputerDistribution).Subscribe(item);
+                    //Console.WriteLine($"{item.Account.PublicAddress} subscribe to {node.Account.PublicAddress}");
+                }
+            }
             return nodes;
         }
 

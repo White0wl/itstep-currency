@@ -4,7 +4,7 @@ namespace StepCoin.BaseClasses
 {
     public interface IBlockChain
     {
-        IEnumerable<IBlock> Blocks { get; }
-        IEnumerable<ITransaction> TransactionsOnBlocks { get; }
+        IEnumerable<BaseBlock> Blocks { get; }
+        IEnumerable<BaseTransaction> TransactionsOnBlocks { get; }
     }
 }

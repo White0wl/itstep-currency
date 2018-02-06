@@ -15,7 +15,7 @@ namespace StepCoin.User
 
         public Miner(HashCode addressMiner) => PublicAddress = addressMiner;
 
-        public IBlock MineBlock(IEnumerable<ITransaction> transactionsToMine, IBlock lastBlockInChain, CancellationToken token)
+        public BaseBlock MineBlock(IEnumerable<BaseTransaction> transactionsToMine, BaseBlock lastBlockInChain, CancellationToken token)
         {
             IsMining = true;
             Block blockToMine = new Block(lastBlockInChain.Hash, lastBlockInChain.Id + 1);
@@ -28,7 +28,7 @@ namespace StepCoin.User
             IsMining = false;
             return blockToMine;
         }
-        public async Task<IBlock> MineBlockAsync(IEnumerable<ITransaction> transactionsToMine, IBlock lastBlockInChain, CancellationTokenSource cancellationToken) =>
+        public async Task<BaseBlock> MineBlockAsync(IEnumerable<BaseTransaction> transactionsToMine, BaseBlock lastBlockInChain, CancellationTokenSource cancellationToken) =>
             await Task.Run(() => { return MineBlock(transactionsToMine, lastBlockInChain, cancellationToken.Token); }, cancellationToken.Token);
     }
 }

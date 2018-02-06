@@ -3,33 +3,34 @@ using StepCoin.Hash;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace StepCoin.BlockChainClasses
 {
-    public class Block : IBlock
+    [DataContract]
+    public class Block : BaseBlock
     {
-        public int Id { get; private set; }
-        public HashCode PrevHash { get; private set; }
-        public HashCode Hash { get; internal set; }
 
+        [DataMember]
         public int Difficulty { get; private set; }
+        [DataMember]
         public int Nonce { get; private set; }
 
+        [DataMember]
         private HashCode _miner;//адрес эккаунта майнера, на который переведется вознаграждение   
-        private DateTime _timestamp;//Время получения хэша
-
-        public IList<ITransaction> Transactions { get; private set; } = new List<ITransaction>();
-
-        public DateTime DateOfReceiving { get; private set; }
-
+        [DataMember]
+        private DateTime _timestamp;//Время получения хэша        
+        
         public Block(HashCode prevHash, int id)
         {
+            
             PrevHash = prevHash.Clone();
             Id = id;
+            Transactions = new List<BaseTransaction>();
         }
 
-        public HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmBlockHash,
+        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmBlockHash,
                 Encoding.Unicode.GetBytes($"{Id}{PrevHash}{String.Join(string.Empty, Transactions.Select(t => t.Hash))}{Nonce}")));
 
         internal HashCode CalculateNewHash(int difficulty, HashCode miner)
@@ -53,7 +54,7 @@ namespace StepCoin.BlockChainClasses
                 $"{String.Join("\r\n", Transactions.Select(t => t.ToString()))}";
         }
 
-        public IChainElement Clone() => new Block(PrevHash, Id) { Hash = Hash, Nonce = Nonce, Transactions = Transactions.Select(t => t.Clone() as ITransaction).ToList(), Difficulty = Difficulty, _miner = _miner?.Clone(), _timestamp = _timestamp };
+        public override BaseChainElement Clone() => new Block(PrevHash, Id) { Hash = Hash, Nonce = Nonce, Transactions = Transactions.Select(t => t.Clone() as BaseTransaction).ToList(), Difficulty = Difficulty, _miner = _miner?.Clone(), _timestamp = _timestamp };
     }
 
 

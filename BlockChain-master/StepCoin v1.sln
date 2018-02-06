@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2026
+VisualStudioVersion = 15.0.27130.2003
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepCoin", "StepCoin\StepCoin.csproj", "{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoggerLibrary", "LoggerLibrary\LoggerLibrary.csproj", "{20A3D632-45AD-44D5-A768-5DE86541F208}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{C26F0838-69CC-4FA2-93BA-E485E84DA247}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneComputerTest", "Test\OneComputerTest.csproj", "{C26F0838-69CC-4FA2-93BA-E485E84DA247}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DistributionLibrary", "DistributionLibrary\DistributionLibrary.csproj", "{BD0FA3D7-5D60-44B7-94D8-1211DFD1C44E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PTest", "P2PTest\P2PTest.csproj", "{EB451F70-2130-4A54-B056-ED1DFAB9F2C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,10 +29,10 @@ Global
 		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C26F0838-69CC-4FA2-93BA-E485E84DA247}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BD0FA3D7-5D60-44B7-94D8-1211DFD1C44E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BD0FA3D7-5D60-44B7-94D8-1211DFD1C44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BD0FA3D7-5D60-44B7-94D8-1211DFD1C44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BD0FA3D7-5D60-44B7-94D8-1211DFD1C44E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EB451F70-2130-4A54-B056-ED1DFAB9F2C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EB451F70-2130-4A54-B056-ED1DFAB9F2C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EB451F70-2130-4A54-B056-ED1DFAB9F2C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EB451F70-2130-4A54-B056-ED1DFAB9F2C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

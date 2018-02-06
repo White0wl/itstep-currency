@@ -1,10 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace StepCoin.Hash
 {
+    [DataContract]
     public class HashCode
     {
-        public string Code { get; }
+        [DataMember]
+        public string Code { get; internal set; }
 
         public override bool Equals(object obj)
         {
