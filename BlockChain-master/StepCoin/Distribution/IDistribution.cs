@@ -5,19 +5,25 @@ using StepCoin.User;
 
 namespace StepCoin.Distribution
 {
-    public delegate void GetBlock(BaseBlock block);
-    public delegate void GetPendingElement(PendingConfirmChainElement element);
+    public delegate void TakeBlock(BaseBlock block);
+    public delegate void TakePendingElement(PendingConfirmChainElement element);
+    public delegate void RequestBlocks();
+    public delegate void RequestPendingElements();
     public interface IDistribution
     {
-        HashCode ClientCode { get; set; }
+        HashCode Client { get; }
         //Уведомить подписчиков об элементе
         void NotifyAboutPendingElement(PendingConfirmChainElement element);
         //Уведомить подписчиков о добавленном блоке
-        void NotifyAboutBlock(BaseBlock newBlock);
+        void NotifyAboutBlock(BaseBlock block);
 
         //Получение блока
-        event GetBlock BlockNotification;
-        //Получение ожидающего подтверждения элементе
-        event GetPendingElement PendingElementNotification;
+        event TakeBlock BlockNotification;
+        //Получение ожидающего подтверждения элемента
+        event TakePendingElement PendingElementNotification;
+        //Запрос у подписчика(ов) о надобности получения блоков
+        event RequestBlocks RequestBlocks;
+        //Запрос у подписчика(ов) о надобности получения ожидающих подтверждения элементов
+        event RequestPendingElements RequestPendingElements;
     }
 }

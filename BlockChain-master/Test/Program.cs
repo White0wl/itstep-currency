@@ -54,7 +54,6 @@ namespace Test
             List<Task<bool>> tasks = new List<Task<bool>>();
             foreach (var item in nodeList)
             {
-                item.FoundAndAddConfirmedTransactions();
                 Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanMine}");
                 tasks.Add(new Task<bool>(() => { item.StartMine(); return true; }));
             }
@@ -92,11 +91,11 @@ namespace Test
 
         private static List<Node> GenerateNodes(int count)
         {
-            var nodes = new List<Node> {new Node("node 0", "pass0")};
+            var nodes = new List<Node> { new Node(new Account("node 0", "pass0")) };
             if (count > 1)
                 for (var i = 0; i < count - 1; i++)
                 {
-                    nodes.Add(new Node($"node {(i + 1)}",$"pass{(i + 1)}"));
+                    nodes.Add(new Node(new Account($"node {(i + 1)}", $"pass{(i + 1)}")));
                 }
 
 
@@ -116,7 +115,7 @@ namespace Test
         {
             foreach (var item in enumerable)
             {
-                Console.WriteLine($"{item.Element.Hash} Confirmations: {item.Confirmations.Count(c => c.Value)} Denials: {item.Confirmations.Count(c => !c.Value)}");
+                Console.WriteLine($"{item.Element.Hash} Confirmations: {item.CountConfirm} of {item.Confirmations.Count}");
             }
         }
     }

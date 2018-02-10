@@ -7,11 +7,11 @@ namespace StepCoin
     {
         public static int CountTransactionsToBlock { get; set; } = 1;
         public static int ActualDifficulty { get; set; } = 5;//Актуальная сложность для вычисления хэша
-        public static int TransactionCountConfirmations { get; set; }//Требуемое количество подтверждений транзакции для добавления в новый блок 
-                                                                     //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
+        public static int TransactionCountConfirmations { get; set; } = 1;//Требуемое количество подтверждений транзакции для добавления в новый блок 
+                                                                          //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
 
-        public static int BlockCountConfirmations { get; set; }//Требуемое количество подтверждений нового блока для добавления в цепь(BlockChain) 
-                                                               //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
+        public static int BlockCountConfirmations { get; set; } = 1;//Требуемое количество подтверждений нового блока для добавления в цепь(BlockChain) 
+                                                                    //*На данный момент значение будет в зависимости от количества зарегестрированых аккаунтов (AccountList.cs)
 
         public static int StartBalance { get; set; } = 50;
         public static TimeSpan TransactionConfirmationTime { get; set; } = new TimeSpan(0, 0, 0);//Время для распространения и подтверждения/опровержения новой транзакции

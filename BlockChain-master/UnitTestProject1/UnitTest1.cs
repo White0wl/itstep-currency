@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using StepCoin;
 using StepCoin.Hash;
+using StepCoin.User;
 using StepCoin.Validators;
 
 namespace UnitTestProject1
@@ -55,7 +59,7 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestMethod6()
         {
-            var accounts = new ObservableCollection<HashCode>{new HashCode("a1"),new HashCode("a2"),new HashCode("a3")};
+            var accounts = new ObservableCollection<HashCode> { new HashCode("a1"), new HashCode("a2"), new HashCode("a3") };
             var hash = new HashCode("b1");
             Assert.IsFalse(accounts.Contains(hash));
         }
@@ -71,7 +75,26 @@ namespace UnitTestProject1
         [TestMethod]
         public void TestMethod8()
         {
-            Assert.IsFalse(BlockValidator.IsCanBeAddedToChain(null, null));
+            Assert.IsFalse(BlockValidator.IsCanBeAddedToChain(null, null).Key);
+        }
+
+
+
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TestMethodSavingAccountsWithException()
+        {
+            var hash = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes("name")));
+            AccountList.AddAccountKey(hash);
+            ;
+        }
+
+        [TestMethod]
+        public void TestMethodSavingAccounts()
+        {
+            var hash = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes("name" + AccountList.Accounts.Count())));
+            AccountList.AddAccountKey(hash);
+            ;
         }
     }
 }

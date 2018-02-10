@@ -18,14 +18,16 @@ namespace StepCoin.Validators
         /// ??? это будет сделано после того, как решим, как производить отсечку pending transactions
         /// </summary>
         /// <returns></returns>
-        public static bool IsCanBeAddedToChain(BaseBlock newBlock, BaseBlock lastBlock)
+        public static KeyValuePair<bool, string> IsCanBeAddedToChain(BaseBlock newBlock, BaseBlock lastBlock)
         {
             if (newBlock is null) throw new ArgumentNullException(nameof(newBlock));
             if (lastBlock is null) throw new ArgumentNullException(nameof(lastBlock));
 
-            if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return false;
-            return lastBlock.Hash == newBlock.PrevHash &&
-                newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty);
+            if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return new KeyValuePair<bool, string>(false, "Hash is empty");
+            var v = new KeyValuePair<bool, string>(lastBlock.Hash == newBlock.PrevHash &&
+                newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty), "");
+            if (!v.Key) return new KeyValuePair<bool, string>(false, "Error of previous hash or complexity mismatch");
+            return v;
         }
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace StepCoin.Validators
 
         public static IEnumerable<BaseBlock> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) => pendingConfirmElements
             .Where(pe => pe.Element is BaseBlock)//Нахождение всех ожидающих блоков, исключая транзакции
-            .Where(pe => pe.Confirmations.Count(c => c.Value) >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
+            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
             .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
             .Select(cb => cb.Element as BaseBlock);
     }

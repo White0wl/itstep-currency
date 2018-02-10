@@ -20,7 +20,11 @@ namespace StepCoin.User
         public Account(string name, string password)
         {
             PublicAddress = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes(name)));
-            Password = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmSecretHashAccout, Encoding.Unicode.GetBytes(PublicAddress.Code + password)));
+            Password = GetPassword(PublicAddress, password);
         }
+
+        public static HashCode GetPassword(HashCode publicAddress, string password) =>
+            new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmSecretHashAccout, Encoding.Unicode.GetBytes(publicAddress.Code + password)));
+
     }
 }

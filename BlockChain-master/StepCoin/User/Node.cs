@@ -4,6 +4,7 @@ using StepCoin.BlockChainClasses;
 using StepCoin.Distribution;
 using StepCoin.Hash;
 using StepCoin.Validators;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,12 +17,14 @@ namespace StepCoin.User
         public Miner Miner { get; }
         public IDistribution Distribution
         {
-            get => _distribution; set
+            get => _distribution;
+            set
             {
                 if (_distribution != null)
                 {
                     _distribution.BlockNotification -= NotificationNewBlock;
                     _distribution.PendingElementNotification -= NotificationPendingElement;
+                    _distribution.RequestBlocks -= NotifyAboutAllBlocks;
                 }
 
                 _distribution = value;
@@ -31,11 +34,18 @@ namespace StepCoin.User
                 _distribution.PendingElementNotification += NotificationPendingElement;
             }
         }
+
+        private void NotifyAboutAllBlocks() => BlockChain.Blocks.ToList().ForEach(b => Distribution.NotifyAboutBlock(b));
+        private void NotifyAboutAllPendingElements() => _pendingConfirmElements.ForEach(pe => Distribution.NotifyAboutPendingElement(pe));
         public BlockChain BlockChain { get; }
+
+
+        public IEnumerable<BaseTransaction> ReadyForMiningElements => FoundConfirmedTransactions().Where(t => !_miningTransactions.Contains(t));
+
         /// <summary>
         /// Подтвержденные транзакции, транслируемые другим узлам
         /// </summary>
-        public List<BaseTransaction> BroadcastTransactions { get; } = new List<BaseTransaction>();
+        //public List<BaseTransaction> BroadcastTransactions { get; } = new List<BaseTransaction>();
         /// <summary>
         /// Транзакции участвующие в получении нового блока
         /// </summary>
@@ -43,12 +53,24 @@ namespace StepCoin.User
         /// <summary>
         /// Блоки и транзакции ожидающие подтверждения других пользователей
         /// </summary>
+        /// 
+        public decimal NodeBalance => BlockChain.GetBalance(Account.PublicAddress);
         public IEnumerable<PendingConfirmChainElement> PendingConfirmElements => _pendingConfirmElements.Select(pe => pe.Clone());
         private readonly List<PendingConfirmChainElement> _pendingConfirmElements = new List<PendingConfirmChainElement>();
-        public bool IsCanMine => (BroadcastTransactions.Count() >= BlockChainConfigurations.CountTransactionsToBlock && !Miner.IsMining);
+        public bool IsCanMine => (ReadyForMiningElements.Count() >= BlockChainConfigurations.CountTransactionsToBlock && !Miner.IsMining);
         private CancellationTokenSource _cancelTokenSource;
         private IDistribution _distribution;
 
+        public Node(IAccount account, IDistribution distribution = null)
+        {
+            if (account is null) throw new ArgumentNullException(nameof(account));
+            Account = account;
+            Distribution = distribution ?? new OneComputerDistribution();
+            BlockChain = new BlockChain();
+            Miner = new Miner(Account.PublicAddress);
+            //if (baseNode != null)
+            //    SubscribeToEvents(baseNode);
+        }
         public BaseBlock StartMine()
         {
             if (!IsCanMine) return null;
@@ -66,15 +88,15 @@ namespace StepCoin.User
         private List<BaseTransaction> GetTransactionsToMine()
         {
             var toMine = new List<BaseTransaction>();
-            foreach (var transaction in BroadcastTransactions)
+            foreach (var transaction in ReadyForMiningElements)
             {
                 toMine.Add(transaction);
                 if (toMine.Count == BlockChainConfigurations.CountTransactionsToBlock) break;
             }
-            foreach (var transaction in toMine)
-            {
-                BroadcastTransactions.Remove(transaction);
-            }
+            //foreach (var transaction in toMine)
+            //{
+            //    BroadcastTransactions.Remove(transaction);
+            //}
             return toMine;
         }
 
@@ -83,24 +105,13 @@ namespace StepCoin.User
             if (_cancelTokenSource is null) return;
             if (_cancelTokenSource.IsCancellationRequested) return;
             _cancelTokenSource.Cancel();
-            foreach (var transaction in _miningTransactions)
-            {
-                BroadcastTransactions.Add(transaction);
-            }
+            //foreach (var transaction in _miningTransactions)
+            //{
+            //    BroadcastTransactions.Add(transaction);
+            //}
             _miningTransactions.Clear();
         }
 
-        public Node(string name, string password, IDistribution distribution = null)
-        {
-            Account = new Account(name, password);
-            AccountList.Accounts.Add(Account.PublicAddress);
-            Distribution = distribution ?? new OneComputerDistribution();
-            Distribution.ClientCode = Account.PublicAddress.Clone();
-            BlockChain = new BlockChain();
-            Miner = new Miner(Account.PublicAddress);
-            //if (baseNode != null)
-            //    SubscribeToEvents(baseNode);
-        }
         public void NotificationPendingElement(PendingConfirmChainElement element)
         {
             if (element is null) return;
@@ -121,20 +132,26 @@ namespace StepCoin.User
             }
         }
 
-
-
+        public void ClearPendingElements()
+        {
+            var list = _pendingConfirmElements.Select(pe => pe);
+            foreach (var pendingElement in list)
+            {
+                _pendingConfirmElements.Remove(pendingElement);
+            }
+        }
 
         //Проверка елемента который уже есть в списке PendingConfirmElements и уведомление подписчиков об изменении результата подтверждения
         //Если текущий Node уже подтверждал/опровергал ожидающий елемент, подписчики будут уведомлены лишь в случае изменения решения
         private void ConfirmOrDenyElement(PendingConfirmChainElement pendingElement)
         {
             if (pendingElement is null) return;
-            var oldValue = IsConfirm(pendingElement.Element);
+            var oldValue = Confirm(pendingElement.Element);
             var newValue = oldValue;
             if (pendingElement.Confirmations.ContainsKey(Account.PublicAddress))
                 oldValue = pendingElement.Confirmations[Account.PublicAddress];
             pendingElement.Confirmations[Account.PublicAddress] = newValue;
-            if (oldValue != newValue)
+            if (oldValue.Key != newValue.Key)
                 Distribution.NotifyAboutPendingElement(pendingElement);
 
             if (pendingElement.CountConfirm >= BlockChainConfigurations.BlockCountConfirmations && pendingElement.Element is BaseBlock)
@@ -151,13 +168,13 @@ namespace StepCoin.User
                 if (block.PrevHash != BlockChain.Blocks.Last().Hash) return;
             }
             _pendingConfirmElements.Add(pendingElement);
-            pendingElement.Confirmations[Account.PublicAddress] = IsConfirm(pendingElement.Element);
+            pendingElement.Confirmations[Account.PublicAddress] = Confirm(pendingElement.Element);
             Distribution.NotifyAboutPendingElement(pendingElement);
         }
 
-        private bool IsConfirm(BaseChainElement pendingChainElement)
+        private KeyValuePair<bool, string> Confirm(BaseChainElement pendingChainElement)
         {
-            var result = false;
+            var result = new KeyValuePair<bool, string>();
             switch (pendingChainElement)
             {
                 case BaseBlock _:
@@ -167,9 +184,9 @@ namespace StepCoin.User
                 case BaseTransaction _:
                     result = TransactionValidator.IsValidTransaction(pendingChainElement as BaseTransaction,
                         BlockChain.TransactionsOnBlocks
-                                .Union(_miningTransactions)
-                            .Union(BroadcastTransactions)
-                            .Union(FoundConfirmedTransactions().Where(t => t.Hash != (pendingChainElement as BaseTransaction)?.Hash)));
+                                .Union(_miningTransactions)//Транзакции учавствующие в майнинге
+                                                           //.Union(BroadcastTransactions)//транслируемые Транзакции
+                            .Union(FoundConfirmedTransactions().Where(t => t.Hash != pendingChainElement?.Hash)));
                     break;
             }
             return result;
@@ -185,20 +202,22 @@ namespace StepCoin.User
             {
                 _pendingConfirmElements.Remove(block);
             }
-            var transactionsToRemove = newBlock.Transactions.Select(transaction => BroadcastTransactions.FirstOrDefault(t => t.Hash == transaction.Hash)).Where(toRemove => toRemove != null).ToList();
-            foreach (var transaction in transactionsToRemove)
+            var transactionsToRemove = newBlock.Transactions;//newBlock.Transactions.Select(transaction => BroadcastTransactions.FirstOrDefault(t => t.Hash == transaction.Hash)).Where(toRemove => toRemove != null).ToList();
+            foreach (var pendingElement in _pendingConfirmElements
+                .Where(pe => pe.Element is BaseTransaction)
+                .Where(pe => transactionsToRemove.FirstOrDefault(t => t.Hash == pe.Element.Hash) != null))
             {
-                BroadcastTransactions.Remove(transaction);
+                RemovePendingElelment(pendingElement);
             }
+            Logger.Instance.LogMessage($"{Account.PublicAddress} add block {newBlock.Hash}");
+            Distribution.NotifyAboutBlock(newBlock);
             foreach (var element in PendingConfirmElements)
             {
                 NotificationPendingElement(element);
             }
-
-
-            Logger.Instance.LogMessage($"{Account.PublicAddress} add block {newBlock.Hash}");
-            Distribution.NotifyAboutBlock(newBlock);
         }
+
+        public void RemovePendingElelment(PendingConfirmChainElement pendingElement) => _pendingConfirmElements.Remove(pendingElement);
 
         public BaseBlock FoundConfirmedBlock()
         {
@@ -211,15 +230,6 @@ namespace StepCoin.User
         public void FoundAndAddConfirmedBlock() => NotificationNewBlock(FoundConfirmedBlock());
 
         private IEnumerable<BaseTransaction> FoundConfirmedTransactions() => TransactionValidator.ConfirmedTransactions(_pendingConfirmElements);
-
-        public void FoundAndAddConfirmedTransactions()
-        {
-            foreach (var transaction in FoundConfirmedTransactions().ToList())
-            {
-                if (BroadcastTransactions.Union(_miningTransactions).FirstOrDefault(pe => pe.Hash == transaction.Hash) is null)
-                    BroadcastTransactions.Add(transaction);
-            }
-        }
 
         public void GenerateNewTransaction(HashCode recipient, decimal amount)
         {

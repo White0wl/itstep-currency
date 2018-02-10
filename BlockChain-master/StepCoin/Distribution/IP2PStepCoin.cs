@@ -1,5 +1,6 @@
 ﻿using StepCoin.BaseClasses;
 using StepCoin.BlockChainClasses;
+using StepCoin.Hash;
 using System.ServiceModel;
 
 namespace StepCoin.Distribution
@@ -14,5 +15,14 @@ namespace StepCoin.Distribution
         void ObtainBlock(BaseBlock block);
         [OperationContract(IsOneWay = true)]
         void ObtainPendingElement(PendingConfirmChainElement element);
+        [OperationContract(IsOneWay = true)]
+        void ObtainPublicKey(HashCode publicKey);
+
+        [OperationContract(IsOneWay = true)]
+        void RequestAccountsFromProxy();
+        [OperationContract(IsOneWay = true)]
+        void RequestBlocksFromProxy();
+        [OperationContract(IsOneWay = true)]
+        void RequestPendingElementsFromProxy();
     }
 }

@@ -14,7 +14,7 @@ namespace StepCoin.BlockChainClasses
         public BaseChainElement Element { get; private set; }
         //Содержит адресс подтвердителя и его результат
         [DataMember]
-        public Dictionary<HashCode, bool> Confirmations { get; private set; } = new Dictionary<HashCode, bool>();
+        public Dictionary<HashCode, KeyValuePair<bool, string>> Confirmations { get; private set; } = new Dictionary<HashCode, KeyValuePair<bool, string>>();
         [DataMember]
         public DateTime PendingStartTime { get; private set; }
 
@@ -26,6 +26,6 @@ namespace StepCoin.BlockChainClasses
             PendingStartTime = PendingStartTime
         };
 
-        public int CountConfirm => Confirmations.Count(c => c.Value);
+        public int CountConfirm => Confirmations.Count(c => c.Value.Key);
     }
 }

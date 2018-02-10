@@ -31,13 +31,14 @@ namespace StepCoin.BlockChainClasses
         /// <param name="newBlock"></param>
         public bool TryAddBlock(BaseBlock newBlock)
         {
-            var result = BlockValidator.IsCanBeAddedToChain(newBlock, _chain.Last());
+            var result = BlockValidator.IsCanBeAddedToChain(newBlock, _chain.Last()).Key;
             if (result)
             {
                 _chain.Add(newBlock);
             }
-
             return result;
         }
+
+        public decimal GetBalance(HashCode userPublicKey) => TransactionValidator.ActualBalance(userPublicKey, TransactionsOnBlocks.ToArray());
     }
 }

@@ -10,18 +10,21 @@ namespace StepCoin.Validators
 {
     public static class TransactionValidator
     {
-        public static bool IsValidTransaction(BaseTransaction someTransaction, IEnumerable<BaseTransaction> transactions)
+        public static KeyValuePair<bool, string> IsValidTransaction(BaseTransaction someTransaction, IEnumerable<BaseTransaction> transactions)
         {
             if (someTransaction is null) throw new ArgumentNullException(nameof(someTransaction));
-            if (someTransaction.Amount <= 0) return false;
-            if (!IsValidAddresses(someTransaction.Sender, someTransaction.Recipient)) return false;
+            if (someTransaction.Amount <= 0) return new KeyValuePair<bool, string>(false, "Amount less than one unit");
+            if (!IsValidAddresses(someTransaction.Sender, someTransaction.Recipient)) return new KeyValuePair<bool, string>(false, "Sender or Recipient not found");
+            if (someTransaction.Sender == someTransaction.Recipient) return new KeyValuePair<bool, string>(false, "Sender can not be the recipient");
+
             var baseTransactions = transactions as BaseTransaction[] ?? transactions.ToArray();
-            var result = ActualBalance(someTransaction.Sender, baseTransactions) - someTransaction.Amount >= 0;
+            var result = new KeyValuePair<bool, string>(ActualBalance(someTransaction.Sender, baseTransactions) - someTransaction.Amount >= 0, "");
+            if (!result.Key) return new KeyValuePair<bool, string>(false, "Not enough money from the sender");
 
             return result;
         }
 
-        private static decimal ActualBalance(HashCode sender, BaseTransaction[] baseTransactions) =>
+        internal static decimal ActualBalance(HashCode sender, BaseTransaction[] baseTransactions) =>
             ReceivedTransactions(sender, baseTransactions).Sum(t => t.Amount) -
             SentTransactions(sender, baseTransactions).Sum(t => t.Amount) +
             BlockChainConfigurations.StartBalance;
@@ -58,7 +61,7 @@ namespace StepCoin.Validators
         public static IEnumerable<BaseTransaction> ConfirmedTransactions(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) =>
             pendingConfirmElements
             .Where(pe => pe.Element is BaseTransaction)//Нахождение всех ожидающих транзакций, исключая блоки
-            .Where(pe => pe.Confirmations.Count(c => c.Value) >= BlockChainConfigurations.TransactionCountConfirmations)//Проверка кол.подтверждений
+            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.TransactionCountConfirmations)//Проверка кол.подтверждений
             .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.TransactionConfirmationTime)//Проверка времени распространения
             .Select(pe => pe.Element as BaseTransaction);
     }
