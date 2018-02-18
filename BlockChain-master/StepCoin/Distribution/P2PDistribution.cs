@@ -29,7 +29,7 @@ namespace StepCoin.Distribution
 
         public void NotifyAboutBlock(BaseBlock newBlock)
         {
-            if (!IsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
+            if (!CollectionIsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
             SendAllProxyBlock(newBlock);
         }
         private void SendAllProxyBlock(BaseBlock block)
@@ -42,7 +42,7 @@ namespace StepCoin.Distribution
         }
         public void NotifyAboutPendingElement(PendingConfirmChainElement pendingElement)
         {
-            if (!IsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
+            if (!CollectionIsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
             //Logger.Instance.LogMessage($"Sent item {pendingElement.Element.Hash}");
             SendAllProxyPendingElement(pendingElement);
         }
@@ -85,10 +85,19 @@ namespace StepCoin.Distribution
             PendingElementNotification?.Invoke(element);
         }
 
-        public void ObtainPublicKey(HashCode publicKey)
+        public void ObtainAccount(BaseAccount account)
         {
             var refreshAccountsAction = new Action(() =>
-                AccountList.AddAccountKey(publicKey));
+            {
+                try
+                {
+                    AccountList.AddAccount(account);
+                }
+                catch
+                {
+                    // ignored
+                }
+            });
             if (_dispatcher != null)
                 _dispatcher.BeginInvoke(refreshAccountsAction);
             else
@@ -97,17 +106,17 @@ namespace StepCoin.Distribution
 
         public void RequestAccountsFromProxy()
         {
-            if (!IsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
+            if (!CollectionIsNotEmpty(_remoteEndPoints)) RefreshRemoteEndPoints();
             foreach (var account in AccountList.Accounts)
             {
                 SendAllProxyAccount(account);
             }
         }
-        private void SendAllProxyAccount(HashCode publicKey)
+        private void SendAllProxyAccount(BaseAccount account)
         {
             foreach (var endPoint in _remoteEndPoints)
             {
-                try { GetProxy(endPoint).ObtainPublicKey(publicKey); }
+                try { GetProxy(endPoint).ObtainAccount(account); }
                 catch { }
             }
         }
@@ -125,7 +134,7 @@ namespace StepCoin.Distribution
         public PeerNameRecordCollection AvailablePeers { get; set; }
         public string Classifier { get; }
 
-        private Dispatcher _dispatcher;
+        private readonly Dispatcher _dispatcher;
 
         public P2PDistribution() { }
         public P2PDistribution(string classifier, Dispatcher dispatcher = null)
@@ -151,18 +160,18 @@ namespace StepCoin.Distribution
             RefreshRemoteEndPoints();
         }
 
-        private void SynchronizeAll()
+        private void SynchronizeRequstFull()
         {
             SynchronizeRequestAccounts();
             SynchronizeRequestBlocks();
             SynchronizeRequestPendingElements();
         }
 
-        public void RegisterNode(HashCode publicKey)
+        public void RegisterNode(BaseAccount account)
         {
             var refreshAccountsAction = new Action(() =>
             {
-                SendAllProxyAccount(publicKey);
+                SendAllProxyAccount(account);
             });
             if (_dispatcher != null)
                 _dispatcher.BeginInvoke(refreshAccountsAction);
@@ -174,29 +183,38 @@ namespace StepCoin.Distribution
         {
             AvailablePeers = PeerNameResolve();
             _remoteEndPoints = GetRemoteEndPointsIPv4().ToArray();
+            BlockChainConfigurations.ActiveUsers = AvailablePeers.Count;
         }
 
-        private void SynchronizeRequestAccounts() =>
-            _remoteEndPoints.Select((ep) =>
+        private void SynchronizeRequestAccounts()
+        {
+            foreach (var remoteEndPoint in _remoteEndPoints)
             {
-                try { GetProxy(ep).RequestAccountsFromProxy(); }
-                catch { }
-                return true;
-            });
-        private void SynchronizeRequestBlocks() =>
-            _remoteEndPoints.Select((ep) =>
+                try
+                { GetProxy(remoteEndPoint).RequestAccountsFromProxy(); }
+                catch {/*ignored*/}
+            }
+        }
+
+        private void SynchronizeRequestBlocks()
+        {
+            foreach (var remoteEndPoint in _remoteEndPoints)
             {
-                try { GetProxy(ep).RequestBlocksFromProxy(); }
-                catch { }
-                return true;
-            });
-        private void SynchronizeRequestPendingElements() =>
-            _remoteEndPoints.Select((ep) =>
+                try
+                { GetProxy(remoteEndPoint).RequestBlocksFromProxy(); }
+                catch {/*ignored*/}
+            }
+        }
+
+        private void SynchronizeRequestPendingElements()
+        {
+            foreach (var remoteEndPoint in _remoteEndPoints)
             {
-                try { GetProxy(ep).RequestPendingElementsFromProxy(); }
-                catch { }
-                return true;
-            });
+                try
+                { GetProxy(remoteEndPoint).RequestPendingElementsFromProxy(); }
+                catch {/*ignored*/}
+            }
+        }
 
         private bool IsRegistered() =>
             _peerNameRegistration?.IsRegistered() is true;
@@ -210,7 +228,7 @@ namespace StepCoin.Distribution
         private IEnumerable<IPEndPoint> GetRemoteEndPoints()
         {
             if (!IsRegistered()) throw new Exception("Peer is not registered");
-            List<IPEndPoint> endPoints = new List<IPEndPoint>();
+            var endPoints = new List<IPEndPoint>();
             //Получение адресов друих учасников сети
             AvailablePeers.ToList().ForEach(record => endPoints.AddRange(record.EndPointCollection.Where(ep => !IsLocalAddress(ep))));
             return endPoints;
@@ -222,7 +240,7 @@ namespace StepCoin.Distribution
         private IP2PStepCoin GetProxy(IPEndPoint ipEndPoint) =>
             ChannelFactory<IP2PStepCoin>.CreateChannel(_binding, new EndpointAddress(GetUri(ipEndPoint.Address, ipEndPoint.Port)));
 
-        private static bool IsNotEmpty(IEnumerable<object> enumerable) => enumerable != null && enumerable.Any();
+        private static bool CollectionIsNotEmpty(IEnumerable<object> enumerable) => enumerable != null && enumerable.Any();
         ~P2PDistribution() => ClosePeer();
         public void ClosePeer()
         {
@@ -231,20 +249,15 @@ namespace StepCoin.Distribution
                 _peerNameRegistration.Stop();
                 _peerNameRegistration.Dispose();
             }
-            catch
-            {
-                // ignored
-            }
+            catch {/*ignored*/}
 
             try
             {
                 if (_host is null) return;
                 _host.Close();
             }
-            catch
-            {
-                // ignored
-            }
+            catch {/*ignored*/}
+
         }
     }
 }

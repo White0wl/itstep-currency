@@ -53,8 +53,8 @@ namespace StepCoin.Validators
 
         public static IEnumerable<BaseBlock> ConfirmedBlocks(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) => pendingConfirmElements
             .Where(pe => pe.Element is BaseBlock)//Нахождение всех ожидающих блоков, исключая транзакции
-            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.BlockCountConfirmations)//Проверка кол.подтверждений
-            .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.BlockConfirmationTime)//Проверка времени распространения
+            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.ConfirmationsCount)//Проверка кол.подтверждений
+            .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.ConfirmationTimeBlock)//Проверка времени распространения
             .Select(cb => cb.Element as BaseBlock);
     }
 }

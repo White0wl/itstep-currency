@@ -19,7 +19,7 @@ namespace StepCoin.BlockChainClasses
             Hash = CalculateHash()
         };
 
-        public sealed override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmTransactionHash, Encoding.Unicode.GetBytes($"{Id}{Sender}{Recipient}{Amount}{Timestamp}")));
+        public sealed override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.HashAlgorithmTransaction, Encoding.Unicode.GetBytes($"{Id}{Sender}{Recipient}{Amount}{Timestamp}")));
 
         public Transaction(HashCode sender, HashCode recipient, decimal amount, int id)
         {

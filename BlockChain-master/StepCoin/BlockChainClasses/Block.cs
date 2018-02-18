@@ -30,7 +30,7 @@ namespace StepCoin.BlockChainClasses
             Transactions = new List<BaseTransaction>();
         }
 
-        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmBlockHash,
+        public override HashCode CalculateHash() => new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.HashAlgorithmBlock,
                 Encoding.Unicode.GetBytes($"{Id}{PrevHash}{string.Join(string.Empty, Transactions.Select(t => t.Hash))}{Nonce}")));
 
         internal HashCode CalculateNewHash(int difficulty, HashCode miner)

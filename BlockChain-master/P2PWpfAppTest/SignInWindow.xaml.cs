@@ -14,6 +14,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using StepCoin.BaseClasses;
 
 namespace P2PWpfAppTest
 {
@@ -34,38 +35,47 @@ namespace P2PWpfAppTest
         private async void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             ShowProgress();
+            await RegisterAccount();
+            HideProggres();
+        }
+
+        private async Task RegisterAccount()
+        {
             var account = new Account(UserLoginTextBox.Text, UserPasswordPasswordBox.Password);
+            var distribution = new P2PDistribution("P2PDemo", Dispatcher);
             try
             {
-                var distribution = new P2PDistribution("P2PDemo", Dispatcher);
                 await Task.Run(() =>
                 {
-                    DateTime start = DateTime.Now;
+                    var start = DateTime.Now;
                     distribution.RegisterPeer();
-                    while (!AccountList.Accounts.Contains(account.PublicAddress) && DateTime.Now - start < TimeSpan.FromSeconds(5)) { }
+                    const int timeOutSeconds = 5;
+                    while (true)
+                    {
+                        if (AccountList.Accounts.Contains(account) || DateTime.Now - start < TimeSpan.FromSeconds(timeOutSeconds)) break;
+                    }
                 });
-                var accountCode = AccountList.Accounts.FirstOrDefault(a => a == account.PublicAddress);
-                if (accountCode != null)
+                var returnResult = false;
+                if (AccountList.Contains(account))
                 {
-                    if (account.Password != Account.GetPassword(accountCode, UserPasswordPasswordBox.Password))
-                        throw new Exception("Неверный логин или пароль");
-                    Account = account;
-                    distribution.ClosePeer();
-                    DialogResult = true;
+                    returnResult = true;
                 }
                 else
                 {
-                    if (CustomMessageBox.Show("Уч. запись не найдена, хотите зарегестрироватся?", button: MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                    if (CustomMessageBox.Show("Уч. запись не найдена.\r\nХотите зарегестрироватся?",
+                            button: MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
-                        distribution.RegisterNode(account.PublicAddress);
-                        Account = account;
-                        distribution.ClosePeer();
-                        DialogResult = true;
+                        distribution.RegisterNode(account);
+                        returnResult = true;
                     }
                 }
+
+                Account = account;
+                if (returnResult)
+                    DialogResult = true;
             }
             catch (Exception ex) { CustomMessageBox.Show(ex.Message); }
-            HideProggres();
+            finally { distribution.ClosePeer(); }
         }
 
         private void HideProggres() => Progress.Visibility = Visibility.Collapsed;
@@ -73,6 +83,6 @@ namespace P2PWpfAppTest
         private void ShowProgress() => Progress.Visibility = Visibility.Visible;
 
         private void UserLoginTextBox_TextChanged(object sender, TextChangedEventArgs e) =>
-            UserPublicKeyTextBox.Text = new Account(UserLoginTextBox.Text ?? "", UserPasswordPasswordBox.Password ?? "").PublicAddress.Code;
+            UserPublicKeyTextBox.Text = new Account(UserLoginTextBox.Text ?? "", UserPasswordPasswordBox.Password ?? "").PublicCode.Code;
     }
 }

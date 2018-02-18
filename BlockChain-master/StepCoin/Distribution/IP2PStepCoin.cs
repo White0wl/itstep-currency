@@ -16,7 +16,7 @@ namespace StepCoin.Distribution
         [OperationContract(IsOneWay = true)]
         void ObtainPendingElement(PendingConfirmChainElement element);
         [OperationContract(IsOneWay = true)]
-        void ObtainPublicKey(HashCode publicKey);
+        void ObtainAccount(BaseAccount account);
 
         [OperationContract(IsOneWay = true)]
         void RequestAccountsFromProxy();

@@ -22,12 +22,10 @@ namespace StepCoin.Distribution
         public void Subscribe(Node subscriber)
         {
             if (subscriber is null) return;
-            if (_subscrubers.FirstOrDefault(s => s.Account.PublicAddress == subscriber.Account.PublicAddress) is null)
-            {
-                _subscrubers.Add(subscriber);
-                subscriber.Distribution.BlockNotification += Distribution_BlockNotification;
-                subscriber.Distribution.PendingElementNotification += Distribution_PendingElementNotification;
-            }
+            if (_subscrubers.FirstOrDefault(s => s.Account.PublicCode == subscriber.Account.PublicCode) != null) return;
+            _subscrubers.Add(subscriber);
+            subscriber.Distribution.BlockNotification += Distribution_BlockNotification;
+            subscriber.Distribution.PendingElementNotification += Distribution_PendingElementNotification;
         }
 
         private void Distribution_PendingElementNotification(PendingConfirmChainElement element) => PendingElementNotification?.Invoke(element);
@@ -37,12 +35,10 @@ namespace StepCoin.Distribution
         public void Describe(Node subscriber)
         {
             if (subscriber is null) return;
-            if (_subscrubers.Contains(subscriber))
-            {
-                subscriber.Distribution.BlockNotification -= Distribution_BlockNotification;
-                subscriber.Distribution.PendingElementNotification -= Distribution_PendingElementNotification;
-                _subscrubers.Remove(_subscrubers.FirstOrDefault(s => s.Account.PublicAddress == subscriber.Account.PublicAddress));
-            }
+            if (!_subscrubers.Contains(subscriber)) return;
+            subscriber.Distribution.BlockNotification -= Distribution_BlockNotification;
+            subscriber.Distribution.PendingElementNotification -= Distribution_PendingElementNotification;
+            _subscrubers.Remove(_subscrubers.FirstOrDefault(s => s.Account.PublicCode == subscriber.Account.PublicCode));
         }
 
 

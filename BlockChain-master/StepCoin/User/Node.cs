@@ -13,7 +13,7 @@ namespace StepCoin.User
 {
     public class Node
     {
-        public IAccount Account { get; }
+        public Account Account { get; }
         public Miner Miner { get; }
         public IDistribution Distribution
         {
@@ -54,20 +54,20 @@ namespace StepCoin.User
         /// Блоки и транзакции ожидающие подтверждения других пользователей
         /// </summary>
         /// 
-        public decimal NodeBalance => BlockChain.GetBalance(Account.PublicAddress);
+        public decimal NodeBalance => BlockChain.GetBalance(Account.PublicCode);
         public IEnumerable<PendingConfirmChainElement> PendingConfirmElements => _pendingConfirmElements.Select(pe => pe.Clone());
         private readonly List<PendingConfirmChainElement> _pendingConfirmElements = new List<PendingConfirmChainElement>();
-        public bool IsCanMine => (ReadyForMiningElements.Count() >= BlockChainConfigurations.CountTransactionsToBlock && !Miner.IsMining);
+        public bool IsCanMine => (ReadyForMiningElements.Count() >= BlockChainConfigurations.TransactionsCountInBlock && !Miner.IsMining);
         private CancellationTokenSource _cancelTokenSource;
         private IDistribution _distribution;
 
-        public Node(IAccount account, IDistribution distribution = null)
+        public Node(Account account, IDistribution distribution = null)
         {
             if (account is null) throw new ArgumentNullException(nameof(account));
             Account = account;
             Distribution = distribution ?? new OneComputerDistribution();
             BlockChain = new BlockChain();
-            Miner = new Miner(Account.PublicAddress);
+            Miner = new Miner(Account.PublicCode);
             //if (baseNode != null)
             //    SubscribeToEvents(baseNode);
         }
@@ -77,9 +77,9 @@ namespace StepCoin.User
 
             _miningTransactions = GetTransactionsToMine();
             _cancelTokenSource = new CancellationTokenSource();
-            Logger.Instance.LogMessage($"{Account.PublicAddress} start mining");
+            Logger.Instance.LogMessage($"{Account.PublicCode} start mining");
             var newBlock = Miner.MineBlock(_miningTransactions, BlockChain.Blocks.Last(), _cancelTokenSource.Token);
-            Logger.Instance.LogMessage($"{Account.PublicAddress} {(_cancelTokenSource.IsCancellationRequested ? "canceled" : "finished")} mining {newBlock?.Hash}");
+            Logger.Instance.LogMessage($"{Account.PublicCode} {(_cancelTokenSource.IsCancellationRequested ? "canceled" : "finished")} mining {newBlock?.Hash}");
             if (newBlock is null) return null;
             NotificationPendingElement(new PendingConfirmChainElement(newBlock));
             return newBlock;
@@ -91,7 +91,7 @@ namespace StepCoin.User
             foreach (var transaction in ReadyForMiningElements)
             {
                 toMine.Add(transaction);
-                if (toMine.Count == BlockChainConfigurations.CountTransactionsToBlock) break;
+                if (toMine.Count == BlockChainConfigurations.TransactionsCountInBlock) break;
             }
             //foreach (var transaction in toMine)
             //{
@@ -124,7 +124,7 @@ namespace StepCoin.User
             }
             else
             {
-                foreach (var confirmation in element.Confirmations.Where(c => c.Key != Account.PublicAddress))
+                foreach (var confirmation in element.Confirmations.Where(c => c.Key != Account.PublicCode))
                 {
                     pendingElementOnList.Confirmations[confirmation.Key] = confirmation.Value;
                 }
@@ -148,13 +148,13 @@ namespace StepCoin.User
             if (pendingElement is null) return;
             var oldValue = Confirm(pendingElement.Element);
             var newValue = oldValue;
-            if (pendingElement.Confirmations.ContainsKey(Account.PublicAddress))
-                oldValue = pendingElement.Confirmations[Account.PublicAddress];
-            pendingElement.Confirmations[Account.PublicAddress] = newValue;
+            if (pendingElement.Confirmations.ContainsKey(Account.PublicCode))
+                oldValue = pendingElement.Confirmations[Account.PublicCode];
+            pendingElement.Confirmations[Account.PublicCode] = newValue;
             if (oldValue.Key != newValue.Key)
                 Distribution.NotifyAboutPendingElement(pendingElement);
 
-            if (pendingElement.CountConfirm >= BlockChainConfigurations.BlockCountConfirmations && pendingElement.Element is BaseBlock)
+            if (pendingElement.CountConfirm >= BlockChainConfigurations.ConfirmationsCount && pendingElement.Element is BaseBlock)
             {
                 NotificationNewBlock((BaseBlock)pendingElement.Element);
             }
@@ -168,7 +168,7 @@ namespace StepCoin.User
                 if (block.PrevHash != BlockChain.Blocks.Last().Hash) return;
             }
             _pendingConfirmElements.Add(pendingElement);
-            pendingElement.Confirmations[Account.PublicAddress] = Confirm(pendingElement.Element);
+            pendingElement.Confirmations[Account.PublicCode] = Confirm(pendingElement.Element);
             Distribution.NotifyAboutPendingElement(pendingElement);
         }
 
@@ -178,7 +178,7 @@ namespace StepCoin.User
             switch (pendingChainElement)
             {
                 case BaseBlock _:
-                    //Logger.Instance.LogMessage($"{(pendingConfirmChainElement.Element as Block).Hash} added to confirm {Account.PublicAddress}");
+                    //Logger.Instance.LogMessage($"{(pendingConfirmChainElement.Element as Block).Hash} added to confirm {Account.PublicCode}");
                     result = BlockValidator.IsCanBeAddedToChain(pendingChainElement as BaseBlock, BlockChain.Blocks.Last());
                     break;
                 case BaseTransaction _:
@@ -209,7 +209,7 @@ namespace StepCoin.User
             {
                 RemovePendingElelment(pendingElement);
             }
-            Logger.Instance.LogMessage($"{Account.PublicAddress} add block {newBlock.Hash}");
+            Logger.Instance.LogMessage($"{Account.PublicCode} add block {newBlock.Hash}");
             Distribution.NotifyAboutBlock(newBlock);
             foreach (var element in PendingConfirmElements)
             {
@@ -233,8 +233,8 @@ namespace StepCoin.User
 
         public void GenerateNewTransaction(HashCode recipient, decimal amount)
         {
-            var newTransaction = new Transaction(Account.PublicAddress, recipient, amount, BlockChain.TransactionsOnBlocks.Count());
-            Logger.Instance.LogMessage($"{Account.PublicAddress} generate new transaction\r\n{newTransaction}\r\n{newTransaction.Hash}");
+            var newTransaction = new Transaction(Account.PublicCode, recipient, amount, BlockChain.TransactionsOnBlocks.Count());
+            Logger.Instance.LogMessage($"{Account.PublicCode} generate new transaction\r\n{newTransaction}\r\n{newTransaction.Hash}");
             NotificationPendingElement(new PendingConfirmChainElement(newTransaction));
         }
 

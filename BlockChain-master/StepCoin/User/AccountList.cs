@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using StepCoin.Hash;
 using System.Linq;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Runtime.Serialization;
 
@@ -11,58 +12,56 @@ namespace StepCoin.User
 {
     public static class AccountList
     {
-        private static readonly ObservableCollection<HashCode> _accounts;
-        private static string path = "accounts.xml";
-        public static IEnumerable<HashCode> Accounts => _accounts.Select(a => a.Clone());
+        public static readonly List<BaseAccount> Accounts;
+        public static readonly string DefaultPath = "accounts.xml";
+        private static string _path = ConfigurationManager.AppSettings["AccountsFilePath"];
         static AccountList()
         {
+            CheckPath();
             try
-            {
-                var v = LoadAccounts() as HashCode[];
-                _accounts = new ObservableCollection<HashCode>(v);
-            }
-            catch { _accounts = new ObservableCollection<HashCode>(); }
-            _accounts.CollectionChanged += ListOfAllAccounts_CollectionChanged;
+            { Accounts = new List<BaseAccount>(LoadAccounts()); }
+            catch
+            { Accounts = new List<BaseAccount>(); }
         }
 
-        public static void AddAccountKey(HashCode publicKey)
+        public static void AddAccount(BaseAccount account)
         {
-
-            if (HashCode.IsNullOrWhiteSpace(publicKey)) throw new ArgumentNullException(nameof(publicKey));
-            if (_accounts.Contains(publicKey)) throw new ArgumentException("User with such a key is already registered");
-            _accounts.Add(publicKey);
+            CheckAccountOnNull(account);
+            if (Contains(account))
+                throw new ArgumentException("User with such a keys is already registered");
+            Accounts.Add(account);
             SaveAccounts();
+        }
+
+        public static bool Contains(BaseAccount account) =>
+            Accounts.FirstOrDefault(a => a.PublicCode == account.PublicCode && a.SecretCode == account.SecretCode) != null;
+
+        public static int Contains(HashCode publicKey) =>
+            Accounts.Count(a => a.PublicCode == publicKey);
+
+        private static void CheckAccountOnNull(BaseAccount account)
+        {
+            if (account is null) throw new ArgumentNullException(nameof(account));
+            if (HashCode.IsNullOrWhiteSpace(account.PublicCode)) throw new ArgumentNullException(nameof(account.PublicCode));
+            if (HashCode.IsNullOrWhiteSpace(account.PublicCode)) throw new ArgumentNullException(nameof(account.SecretCode));
         }
 
         private static void SaveAccounts()
         {
-            using (FileStream fileStram = new FileStream(path, FileMode.Create, FileAccess.ReadWrite))
-            {
-                DataContractSerializer serializer = new DataContractSerializer(typeof(HashCode[]));
-                serializer.WriteObject(fileStram, _accounts.ToArray());
-                fileStram.Position = 0;
-            }
+            CheckPath();
+            using (var fileStram = new FileStream(_path, FileMode.Create, FileAccess.ReadWrite))
+                new DataContractSerializer(typeof(BaseAccount[])).WriteObject(fileStram, Accounts.ToArray());
         }
 
-        private static HashCode[] LoadAccounts()
+        private static void CheckPath() => _path = string.IsNullOrWhiteSpace(_path) ? DefaultPath : _path;
+
+        private static IEnumerable<BaseAccount> LoadAccounts()
         {
-            HashCode[] array;
-            using (Stream stream = new MemoryStream())
-            {
-                byte[] data = File.ReadAllBytes(path);
-                stream.Write(data, 0, data.Length);
-                stream.Position = 0;
-                DataContractSerializer deserializer = new DataContractSerializer(typeof(HashCode[]));
-                array = deserializer.ReadObject(stream) as HashCode[];
-            }
+            CheckPath();
+            BaseAccount[] array;
+            using (var stream = new FileStream(_path, FileMode.Open, FileAccess.Read))
+                array = new DataContractSerializer(typeof(BaseAccount[])).ReadObject(stream) as BaseAccount[];
             return array;
-        }
-
-        private static void ListOfAllAccounts_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            var countConfirmations = Convert.ToInt32(Math.Ceiling(_accounts.Count * 0.5));
-            BlockChainConfigurations.TransactionCountConfirmations = countConfirmations;
-            BlockChainConfigurations.BlockCountConfirmations = countConfirmations;
         }
 
         //public void DepositeWithdraw(Transaction transaction)

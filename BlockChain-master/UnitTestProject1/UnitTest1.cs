@@ -84,16 +84,16 @@ namespace UnitTestProject1
         [ExpectedException(typeof(ArgumentException))]
         public void TestMethodSavingAccountsWithException()
         {
-            var hash = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes("name")));
-            AccountList.AddAccountKey(hash);
+            var account = new Account("name","pass");
+            AccountList.AddAccount(account);
             ;
         }
 
         [TestMethod]
         public void TestMethodSavingAccounts()
         {
-            var hash = new HashCode(HashGenerator.GenerateString(BlockChainConfigurations.AlgorithmPublicHashAccout, Encoding.Unicode.GetBytes("name" + AccountList.Accounts.Count())));
-            AccountList.AddAccountKey(hash);
+            var account = new Account("name", "pass");
+            AccountList.AddAccount(account);
             ;
         }
     }

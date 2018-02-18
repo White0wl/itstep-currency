@@ -27,7 +27,7 @@ namespace P2PWpfAppTest
                 node = new Node(wnd.Account, distribution);
                 distribution.RegisterPeer();
                 RefreshLists();
-                UserPublicKeyTextBlock.Text = node.Account.PublicAddress.Code;
+                UserPublicKeyTextBlock.Text = node.Account.PublicCode.Code;
             }
             else
                 Close();

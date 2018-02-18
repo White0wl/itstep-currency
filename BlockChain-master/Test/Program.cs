@@ -14,7 +14,7 @@ namespace Test
 {
     internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             RandomTest();
         }
@@ -30,15 +30,15 @@ namespace Test
             while (idx++ < count)//Генерация count транзакций
             {
                 Console.Write($"{idx} ");
-                nodeList[r.Next(nodeList.Count)].GenerateNewTransaction(nodeList[r.Next(nodeList.Count)].Account.PublicAddress, r.Next(10, 50));
+                nodeList[r.Next(nodeList.Count)].GenerateNewTransaction(nodeList[r.Next(nodeList.Count)].Account.PublicCode, r.Next(10, 50));
             }
 
-            Thread.Sleep(BlockChainConfigurations.TransactionConfirmationTime);//Ожидание распотранения транзакций
+            Thread.Sleep(BlockChainConfigurations.ConfirmationTimeTransaction);//Ожидание распотранения транзакций
 
             //foreach (var node in nodeList)
             //{
             //    //node.FoundAndAddConfirmedTransactions();
-            //    Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Where(pe=>pe.Element is Transaction).Count()}):");
+            //    Console.WriteLine($"{node.Account.PublicCode} pending transactions ({node.PendingConfirmElements.Where(pe=>pe.Element is Transaction).Count()}):");
             //    ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
             //}
 
@@ -46,7 +46,7 @@ namespace Test
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{node.Account.PublicAddress} pending transactions ({node.PendingConfirmElements.Count(pe => pe.Element is Transaction)}):");
+                Console.WriteLine($"{node.Account.PublicCode} pending transactions ({node.PendingConfirmElements.Count(pe => pe.Element is Transaction)}):");
                 ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Transaction));
             }
             //Console.ReadLine();
@@ -54,7 +54,7 @@ namespace Test
             List<Task<bool>> tasks = new List<Task<bool>>();
             foreach (var item in nodeList)
             {
-                Console.WriteLine($"{item.Account.PublicAddress} can mine: {item.IsCanMine}");
+                Console.WriteLine($"{item.Account.PublicCode} can mine: {item.IsCanMine}");
                 tasks.Add(new Task<bool>(() => { item.StartMine(); return true; }));
             }
 
@@ -69,17 +69,17 @@ namespace Test
             foreach (var node in nodeList)
             {
                 //node.FoundAndAddConfirmedTransactions();
-                Console.WriteLine($"{node.Account.PublicAddress} pending block ({node.PendingConfirmElements.Count(pe => pe.Element is Block)}):");
+                Console.WriteLine($"{node.Account.PublicCode} pending block ({node.PendingConfirmElements.Count(pe => pe.Element is Block)}):");
                 ShowElements(node.PendingConfirmElements.Where(pe => pe.Element is Block));
             }
 
             foreach (var node in nodeList)
             {
-                Console.WriteLine($"Block chain {node.Account.PublicAddress}");
+                Console.WriteLine($"Block chain {node.Account.PublicCode}");
                 var transactions = node.BlockChain.TransactionsOnBlocks;
 
-                decimal amountRecieved = TransactionValidator.ReceivedTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
-                decimal amountSent = TransactionValidator.SentTransactions(node.Account.PublicAddress, transactions).Sum(t => t.Amount);
+                decimal amountRecieved = TransactionValidator.ReceivedTransactions(node.Account.PublicCode, transactions).Sum(t => t.Amount);
+                decimal amountSent = TransactionValidator.SentTransactions(node.Account.PublicCode, transactions).Sum(t => t.Amount);
                 Console.WriteLine($"Balance : {amountRecieved - amountSent + BlockChainConfigurations.StartBalance}$");
                 //foreach (var block in node.BlockChain.Blocks)
                 //{
@@ -105,7 +105,7 @@ namespace Test
                 foreach (var item in nodes.Where(n => n != node))
                 {
                     (node.Distribution as OneComputerDistribution)?.Subscribe(item);
-                    //Console.WriteLine($"{item.Account.PublicAddress} subscribe to {node.Account.PublicAddress}");
+                    //Console.WriteLine($"{item.Account.PublicCode} subscribe to {node.Account.PublicCode}");
                 }
             }
             return nodes;

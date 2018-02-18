@@ -29,14 +29,17 @@ namespace StepCoin.Validators
             SentTransactions(sender, baseTransactions).Sum(t => t.Amount) +
             BlockChainConfigurations.StartBalance;
 
-        public static bool IsValidAddresses(params HashCode[] hashArray)
+        public static bool IsValidAddresses(params HashCode[] publicKeys)
         {
             var result = false;
-            foreach (var hash in hashArray)
+            foreach (var hash in publicKeys)
             {
-                result = !HashCode.IsNullOrWhiteSpace(hash);
-                if (result) result = AccountList.Accounts.Contains(hash);
-                if (!result) break;
+                if (HashCode.IsNullOrWhiteSpace(hash))
+                {
+                    result = false;
+                    break;
+                }
+                result = AccountList.Accounts.FirstOrDefault(a => a.PublicCode == hash) != null;
             }
             return result;
         }
@@ -61,8 +64,8 @@ namespace StepCoin.Validators
         public static IEnumerable<BaseTransaction> ConfirmedTransactions(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) =>
             pendingConfirmElements
             .Where(pe => pe.Element is BaseTransaction)//Нахождение всех ожидающих транзакций, исключая блоки
-            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.TransactionCountConfirmations)//Проверка кол.подтверждений
-            .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.TransactionConfirmationTime)//Проверка времени распространения
+            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.ConfirmationsCountTransaction)//Проверка кол.подтверждений
+            .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.ConfirmationTimeTransaction)//Проверка времени распространения
             .Select(pe => pe.Element as BaseTransaction);
     }
 }
