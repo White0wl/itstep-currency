@@ -51,15 +51,15 @@
                         <Button Name="StopMine"  Margin="5" Content="Остановить"  Command="local:CustomCommands.StopMine"/>
                     </StackPanel>
                     <Button Content="Обновить" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="RefreshTransactionsToMineButton_Click">
-                        <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource BaseButtonMetroStyle}">
-                                <!--<Style.Triggers>
+                        <!--<Button.Style>
+                            <Style TargetType="Button">
+                                --><!--<Style.Triggers>
                                     <DataTrigger Binding="{Binding ElementName=StopMine,Path=IsEnabled}" Value="False">
                                         <Setter Property="Visibility" Value="Collapsed"/>
                                     </DataTrigger>
-                                </Style.Triggers>-->
+                                </Style.Triggers>--><!--
                             </Style>
-                        </Button.Style>
+                        </Button.Style>-->
                     </Button>
                 </Grid>
             </TabItem>
