@@ -34,7 +34,8 @@ namespace StepCoin.BlockChainClasses
             { _chain = new List<BaseBlock>(LoadBlockChain()); }
             catch
             {
-                _chain = new List<BaseBlock> { BlockZero };
+                _chain = new List<BaseBlock>();
+                _chain.Add(BlockZero);
             }
         }
 
