@@ -19,9 +19,7 @@ namespace StepCoin.Validators
 
             var baseTransactions = transactions as BaseTransaction[] ?? transactions.ToArray();
             var result = new KeyValuePair<bool, string>(ActualBalance(someTransaction.Sender, baseTransactions) - someTransaction.Amount >= 0, "");
-            if (!result.Key) return new KeyValuePair<bool, string>(false, "Not enough money from the sender");
-
-            return result;
+            return result.Key ? result : new KeyValuePair<bool, string>(false, "Not enough money from the sender");
         }
 
         internal static decimal ActualBalance(HashCode sender, BaseTransaction[] baseTransactions) =>
@@ -32,14 +30,14 @@ namespace StepCoin.Validators
         public static bool IsValidAddresses(params HashCode[] publicKeys)
         {
             var result = false;
-            foreach (var hash in publicKeys)
+            foreach (var publicKey in publicKeys)
             {
-                if (HashCode.IsNullOrWhiteSpace(hash))
+                if (HashCode.IsNullOrWhiteSpace(publicKey))
                 {
                     result = false;
                     break;
                 }
-                result = AccountList.Accounts.FirstOrDefault(a => a.PublicCode == hash) != null;
+                result = AccountList.Accounts.FirstOrDefault(a => a.PublicCode == publicKey) != null;
             }
             return result;
         }
@@ -64,7 +62,7 @@ namespace StepCoin.Validators
         public static IEnumerable<BaseTransaction> ConfirmedTransactions(IEnumerable<PendingConfirmChainElement> pendingConfirmElements) =>
             pendingConfirmElements
             .Where(pe => pe.Element is BaseTransaction)//Нахождение всех ожидающих транзакций, исключая блоки
-            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.ConfirmationsCountTransaction)//Проверка кол.подтверждений
+            .Where(pe => pe.CountConfirm >= BlockChainConfigurations.ConfirmationsCount)//Проверка кол.подтверждений
             .Where(pe => (DateTime.Now - pe.PendingStartTime) >= BlockChainConfigurations.ConfirmationTimeTransaction)//Проверка времени распространения
             .Select(pe => pe.Element as BaseTransaction);
     }

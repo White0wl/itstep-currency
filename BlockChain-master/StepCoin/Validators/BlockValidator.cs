@@ -26,8 +26,7 @@ namespace StepCoin.Validators
             if (HashCode.IsNullOrWhiteSpace(newBlock.Hash)) return new KeyValuePair<bool, string>(false, "Hash is empty");
             var v = new KeyValuePair<bool, string>(lastBlock.Hash == newBlock.PrevHash &&
                 newBlock.Hash.ToString().Substring(0, BlockChainConfigurations.ActualDifficulty) == new string('0', BlockChainConfigurations.ActualDifficulty), "");
-            if (!v.Key) return new KeyValuePair<bool, string>(false, "Error of previous hash or complexity mismatch");
-            return v;
+            return v.Key ? v : new KeyValuePair<bool, string>(false, "Error of previous hash or complexity mismatch");
         }
 
         /// <summary>

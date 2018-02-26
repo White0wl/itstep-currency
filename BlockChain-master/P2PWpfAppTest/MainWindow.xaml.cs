@@ -1,10 +1,16 @@
 ﻿using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
+using StepCoin;
+using StepCoin.BaseClasses;
 using StepCoin.BlockChainClasses;
 using StepCoin.Distribution;
 using StepCoin.Hash;
 using StepCoin.User;
+using StepCoin.Validators;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 
 namespace P2PWpfAppTest
@@ -16,6 +22,8 @@ namespace P2PWpfAppTest
     {
         P2PDistribution distribution;
         Node node;
+        private Timer timerRefresh;
+
         public MainWindow() => InitializeComponent();
 
         private void SignIn()
@@ -25,46 +33,96 @@ namespace P2PWpfAppTest
             {
                 distribution = new P2PDistribution("P2PDemo", Dispatcher);
                 node = new Node(wnd.Account, distribution);
-                distribution.RegisterPeer();
-                RefreshLists();
-                UserPublicKeyTextBlock.Text = node.Account.PublicCode.Code;
+                distribution.Client = node.Account.PublicCode;
+                FirstLoad();
+                timerRefresh = new Timer(5000);
+                timerRefresh.Elapsed += (sender, arg) => { Dispatcher.BeginInvoke(new Action(() => RefreshLists())); };
+                timerRefresh.Start();
             }
             else
                 Close();
         }
 
+        private async void FirstLoad()
+        {
+            var controller = await this.ShowProgressAsync("Загрузка данных", "Получение удалленых узлов...");
+            await Task.Run(() =>
+            {
+                distribution.RegisterPeer();
+            });
+            RefreshLists();
+            await controller.CloseAsync();
+        }
+
         private void RefreshLists()
         {
+            RefreshRemoteEndPoints();
             RefreshAccounts();
             RefreshPendingElements();
             RefreshReadyForMineTransactions();
             RefreshBlockChain();
         }
 
-        private async void RefreshBlockChain() =>
-            BlockChain.ItemsSource = await Task.Run(() => node.BlockChain.Blocks);
-
-        private async void RefreshReadyForMineTransactions() =>
-            ReadyForMiningElementList.ItemsSource = await Task.Run(() => node.ReadyForMiningElements);
-
-        private async void RefreshPendingElements() =>
-            PendingConfirmElements.ItemsSource = await Task.Run(() => node.PendingConfirmElements);
-
-        private async void RefreshAccounts() =>
-            Accounts.ItemsSource = await Task.Run(() =>
+        private async void RefreshRemoteEndPoints()
+        => await Task.Run(() =>
             {
                 distribution.RefreshRemoteEndPoints();
-                return AccountList.Accounts;
+                distribution.SynchronizeRequstFull();
+                return true;
             });
+
+        private async void RefreshBlockChain()
+        {
+            var index = BlockChain.SelectedIndex;
+            BlockChain.ItemsSource = await Task.Run(() =>
+            {
+                distribution.SynchronizeRequestBlocks();
+                return node.BlockChain.Blocks;
+            });
+
+            UserPublicKeyTextBlock.Text = $"{node.Account.PublicCode.Code} ({node.BlockChain.GetBalance(node.Account.PublicCode)}$)";
+            BlockChain.SelectedIndex = index;
+        }
+
+        private async void RefreshReadyForMineTransactions()
+        {
+            var index = ReadyForMiningElementList.SelectedIndex;
+            ReadyForMiningElementList.ItemsSource = await Task.Run(() => node.ReadyForMiningElements);
+            ReadyForMiningElementList.SelectedIndex = index;
+        }
+
+        private async void RefreshPendingElements()
+        {
+            var index = PendingConfirmElements.SelectedIndex;
+            PendingConfirmElements.ItemsSource = await Task.Run(() =>
+            {
+                distribution.SynchronizeRequestPendingElements();
+                return node.PendingConfirmElements;
+            });
+            PendingConfirmElements.SelectedIndex = index;
+        }
+
+        private async void RefreshAccounts()
+        {
+            var index = Accounts.SelectedIndex;
+            Accounts.ItemsSource = await Task.Run(() =>
+                {
+                    RefreshRemoteEndPoints();
+                    distribution.SynchronizeRequestAccounts();
+                    return AccountList.Accounts.Select(a => new { PublicCode = a.PublicCode, IsOnline = BlockChainConfigurations.ActiveUserKeys.Contains(a.PublicCode.Code) });
+                });
+            ;
+            Accounts.SelectedIndex = index;
+        }
 
         private void GenerateTransactionButton_Click(object sender, RoutedEventArgs e)
         {
             if (Recipient.SelectedItem is null || CountMoney.Value is null) return;
-            node.GenerateNewTransaction((HashCode)Recipient.SelectedItem, (decimal)CountMoney.Value);
-            RefreshPendingElements();
+            node.GenerateNewTransaction(new HashCode(Recipient.Text), (decimal)CountMoney.Value);
         }
 
-        private void RefreshListsButton_Click(object sender, RoutedEventArgs e) => RefreshLists();
+        private void RefreshTransactionsToMineButton_Click(object sender, RoutedEventArgs e) =>
+            RefreshReadyForMineTransactions();
 
         private void Accounts_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -96,6 +154,8 @@ namespace P2PWpfAppTest
         private void SignOutCommand_Executed(object sender, System.Windows.Input.ExecutedRoutedEventArgs e)
         {
             if (CustomMessageBox.Show("Вы уверенны что хотите выйти?", button: MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
+            timerRefresh.Stop();
+            timerRefresh.Dispose();
             distribution.ClosePeer();
             node = null;
             SignIn();
@@ -116,5 +176,7 @@ namespace P2PWpfAppTest
             node.ClearPendingElements();
 
         private void RefreshBlockChainButton_Click(object sender, RoutedEventArgs e) => RefreshBlockChain();
+
+        private void RefreshAccountsButton_Click(object sender, RoutedEventArgs e) => RefreshAccounts();
     }
 }

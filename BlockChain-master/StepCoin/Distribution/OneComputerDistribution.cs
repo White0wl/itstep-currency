@@ -17,7 +17,10 @@ namespace StepCoin.Distribution
         public event RequestPendingElements RequestPendingElements;
 
         private readonly List<Node> _subscrubers = new List<Node>();
-        public HashCode Client { get; private set; }
+
+        public OneComputerDistribution(HashCode client) => Client = client;
+
+        public HashCode Client { get; }
 
         public void Subscribe(Node subscriber)
         {

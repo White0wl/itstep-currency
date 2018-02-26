@@ -5,8 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:P2PWpfAppTest"
         xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:gif="http://wpfanimatedgif.codeplex.com"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525" Loaded="MetroWindow_Loaded">
+        Title="MainWindow"
+                      MinHeight="400" MinWidth="450"
+                      Height="400" Width="500" 
+                      Loaded="MetroWindow_Loaded">
     <Window.CommandBindings>
         <CommandBinding Command="local:CustomCommands.StartMine" CanExecute="StartMineCommand_CanExecute" Executed="StartMineCommand_Executed" />
         <CommandBinding Command="local:CustomCommands.StopMine" CanExecute="StopMineCommand_CanExecute" Executed="StopMineCommand_Executed" />
@@ -16,7 +20,7 @@
         <controls:WindowCommands>
             <TextBlock VerticalAlignment="Center" TextTrimming="CharacterEllipsis" HorizontalAlignment="Center" ToolTip="Публичный ключ" MouseDown="UserPublicKeyTextBlock_MouseDown" Name="UserPublicKeyTextBlock"/>
             <Button Command="local:CustomCommands.SignOut" Content="Выход"/>
-            <Button Click="RefreshListsButton_Click" Content="Обновить списки" ToolTip="Обмновить все списки"/>
+            <Button Click="RefreshTransactionsToMineButton_Click" Content="Обновить списки" ToolTip="Обмновить все списки"/>
         </controls:WindowCommands>
     </controls:MetroWindow.RightWindowCommands>
     <Grid>
@@ -28,25 +32,64 @@
                         </ListView>
                     </GroupBox>
 
+
+                    <Image  VerticalAlignment="Center" Opacity="0.8" gif:ImageBehavior.AnimatedSource="giphy.gif" Stretch="UniformToFill"  >
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=StopMine,Path=IsEnabled}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" HorizontalAlignment="Left">
-                        <Button Margin="5" HorizontalAlignment="Center" Click="FoundConfirmedTransactionsButton_Click" ToolTip="Найти готовые транзакции из ожидающих элементов">Найти</Button>
                         <Button Margin="5" Content="Майнинг"  Command="local:CustomCommands.StartMine"/>
-                        <Button Margin="5" Content="Остановить"  Command="local:CustomCommands.StopMine"/>
+
+                        <Button Name="StopMine"  Margin="5" Content="Остановить"  Command="local:CustomCommands.StopMine"/>
                     </StackPanel>
-                    <Button Content="Обновить" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="RefreshListsButton_Click"/>
+                    <Button Content="Обновить" VerticalAlignment="Bottom" HorizontalAlignment="Right" Click="RefreshTransactionsToMineButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource BaseButtonMetroStyle}">
+                                <!--<Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=StopMine,Path=IsEnabled}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>-->
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </Grid>
             </TabItem>
             <TabItem Header="Учасники">
                 <Grid>
-                    <ListView Name="Accounts" MouseDoubleClick="Accounts_MouseDoubleClick"></ListView>
+                    <ListView Name="Accounts" MouseDoubleClick="Accounts_MouseDoubleClick">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOnline}" Value="True">
+                                        <Setter Property="Foreground" Value="Green"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Ключ" DisplayMemberBinding="{Binding PublicCode}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom">
-                        <ComboBox Name="Recipient" ItemsSource="{Binding ElementName=Accounts,Path=Items}"/>
+                        <ComboBox DisplayMemberPath="PublicCode" Name="Recipient" ItemsSource="{Binding ElementName=Accounts,Path=Items}"/>
                         <controls:NumericUpDown Name="CountMoney" Width="100" ToolTip="Количество денег"/>
                         <Button Content="Отправить" ToolTip="Отправить транзакцию" Click="GenerateTransactionButton_Click"/>
                     </StackPanel>
+                    <Button VerticalAlignment="Bottom" HorizontalAlignment="Right" Content="Обновить" Click="RefreshAccountsButton_Click"/>
                 </Grid>
             </TabItem>
-            <TabItem Header="Ожидающие подтверждения элементы">
+            <TabItem Header="Ожидающие подтверждения">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>

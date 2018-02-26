@@ -1,6 +1,5 @@
 ﻿using StepCoin.BaseClasses;
 using System;
-using System.Collections.ObjectModel;
 using StepCoin.Hash;
 using System.Linq;
 using System.Collections.Generic;
@@ -36,8 +35,8 @@ namespace StepCoin.User
         public static bool Contains(BaseAccount account) =>
             Accounts.FirstOrDefault(a => a.PublicCode == account.PublicCode && a.SecretCode == account.SecretCode) != null;
 
-        public static int Contains(HashCode publicKey) =>
-            Accounts.Count(a => a.PublicCode == publicKey);
+        public static bool Contains(HashCode publicKey) =>
+            Accounts.FirstOrDefault(a => a.PublicCode == publicKey) != null;
 
         private static void CheckAccountOnNull(BaseAccount account)
         {

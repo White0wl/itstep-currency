@@ -32,10 +32,11 @@ namespace StepCoin.User
                 if (_distribution is null) return;
                 _distribution.BlockNotification += NotificationNewBlock;
                 _distribution.PendingElementNotification += NotificationPendingElement;
+                _distribution.RequestBlocks += NotifyAboutAllBlocks;
             }
         }
 
-        private void NotifyAboutAllBlocks() => BlockChain.Blocks.ToList().ForEach(b => Distribution.NotifyAboutBlock(b));
+        private void NotifyAboutAllBlocks() => BlockChain.Blocks.Where(b => b.Transactions.Any()).ToList().ForEach(b => Distribution.NotifyAboutBlock(b));
         private void NotifyAboutAllPendingElements() => _pendingConfirmElements.ForEach(pe => Distribution.NotifyAboutPendingElement(pe));
         public BlockChain BlockChain { get; }
 
@@ -63,9 +64,8 @@ namespace StepCoin.User
 
         public Node(Account account, IDistribution distribution = null)
         {
-            if (account is null) throw new ArgumentNullException(nameof(account));
-            Account = account;
-            Distribution = distribution ?? new OneComputerDistribution();
+            Account = account ?? throw new ArgumentNullException(nameof(account));
+            Distribution = distribution ?? new OneComputerDistribution(account.PublicCode);
             BlockChain = new BlockChain();
             Miner = new Miner(Account.PublicCode);
             //if (baseNode != null)

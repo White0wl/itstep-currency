@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2003
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StepCoin", "StepCoin\StepCoin.csproj", "{72F4AA31-C61F-4DEA-B13B-1EFD1CA6CCAA}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTestProject1", "UnitTestProject1\UnitTestProject1.csproj", "{75FE8913-F0F4-4794-BB82-664C32611E82}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2PWpfAppTest", "P2PWpfAppTest\P2PWpfAppTest.csproj", "{E5E15C1C-BBA2-4C05-9226-63C4A01857D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainApp", "MainApp\MainApp.csproj", "{B9774FCD-9BE3-4766-9D08-80EAE2675223}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{E5E15C1C-BBA2-4C05-9226-63C4A01857D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E5E15C1C-BBA2-4C05-9226-63C4A01857D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E5E15C1C-BBA2-4C05-9226-63C4A01857D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9774FCD-9BE3-4766-9D08-80EAE2675223}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9774FCD-9BE3-4766-9D08-80EAE2675223}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9774FCD-9BE3-4766-9D08-80EAE2675223}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9774FCD-9BE3-4766-9D08-80EAE2675223}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

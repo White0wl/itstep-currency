@@ -28,11 +28,9 @@ namespace StepCoin.User
             }).ToList().ForEach(t => blockToMine.Transactions.Add(t));
             while (blockToMine.CalculateNewHash(BlockChainConfigurations.ActualDifficulty, PublicAddress).Code.Substring(0, BlockChainConfigurations.ActualDifficulty) != new string('0', BlockChainConfigurations.ActualDifficulty))
             {
-                if (token.IsCancellationRequested)
-                {
-                    blockToMine = null;
-                    break;
-                }
+                if (!token.IsCancellationRequested) continue;
+                blockToMine = null;
+                break;
             }
             IsMining = false;
             return blockToMine;

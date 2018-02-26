@@ -1,5 +1,4 @@
-﻿
-using StepCoin.BaseClasses;
+﻿using StepCoin.BaseClasses;
 using StepCoin.BlockChainClasses;
 using System.Collections.Generic;
 using System.Net;
@@ -7,8 +6,6 @@ using System.Linq;
 using System.Net.PeerToPeer;
 using System.ServiceModel;
 using System;
-using System.Text;
-using LoggerLibrary;
 using StepCoin.Hash;
 using StepCoin.User;
 using System.Windows.Threading;
@@ -51,7 +48,7 @@ namespace StepCoin.Distribution
             foreach (var endPoint in _remoteEndPoints)
             {
                 try { GetProxy(endPoint).ObtainPendingElement(pendingElement); }
-                catch { }
+                catch {/*ignored*/ }
             }
         }
 
@@ -93,10 +90,7 @@ namespace StepCoin.Distribution
                 {
                     AccountList.AddAccount(account);
                 }
-                catch
-                {
-                    // ignored
-                }
+                catch{/*ignored*/}
             });
             if (_dispatcher != null)
                 _dispatcher.BeginInvoke(refreshAccountsAction);
@@ -117,12 +111,19 @@ namespace StepCoin.Distribution
             foreach (var endPoint in _remoteEndPoints)
             {
                 try { GetProxy(endPoint).ObtainAccount(account); }
-                catch { }
+                catch { /*ignored*/}
             }
         }
         #endregion
 
-        public HashCode Client { get; private set; }
+        private HashCode _client;
+
+        public HashCode Client
+        {
+            get => _client;
+            set { if (_client != null || _peerNameRegistration?.IsRegistered() is true) return; _client = value; }
+        }
+
         //Локальные адреса V6 и V4
         private readonly List<IPAddress> _localAddresses = new List<IPAddress>(Dns.GetHostEntry(Dns.GetHostName()).AddressList);
         private PeerNameRegistration _peerNameRegistration;
@@ -160,7 +161,7 @@ namespace StepCoin.Distribution
             RefreshRemoteEndPoints();
         }
 
-        private void SynchronizeRequstFull()
+        public void SynchronizeRequstFull()
         {
             SynchronizeRequestAccounts();
             SynchronizeRequestBlocks();
@@ -172,6 +173,7 @@ namespace StepCoin.Distribution
             var refreshAccountsAction = new Action(() =>
             {
                 SendAllProxyAccount(account);
+                try { AccountList.AddAccount(account); } catch { /*ignored*/}
             });
             if (_dispatcher != null)
                 _dispatcher.BeginInvoke(refreshAccountsAction);
@@ -183,10 +185,10 @@ namespace StepCoin.Distribution
         {
             AvailablePeers = PeerNameResolve();
             _remoteEndPoints = GetRemoteEndPointsIPv4().ToArray();
-            BlockChainConfigurations.ActiveUsers = AvailablePeers.Count;
+            BlockChainConfigurations.ActiveUserKeys = AvailablePeers.Select(p => p.Comment).Union(new[] { Client?.Code });
         }
 
-        private void SynchronizeRequestAccounts()
+        public void SynchronizeRequestAccounts()
         {
             foreach (var remoteEndPoint in _remoteEndPoints)
             {
@@ -196,7 +198,7 @@ namespace StepCoin.Distribution
             }
         }
 
-        private void SynchronizeRequestBlocks()
+        public void SynchronizeRequestBlocks()
         {
             foreach (var remoteEndPoint in _remoteEndPoints)
             {
@@ -206,7 +208,7 @@ namespace StepCoin.Distribution
             }
         }
 
-        private void SynchronizeRequestPendingElements()
+        public void SynchronizeRequestPendingElements()
         {
             foreach (var remoteEndPoint in _remoteEndPoints)
             {

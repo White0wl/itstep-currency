@@ -49,10 +49,11 @@ namespace P2PWpfAppTest
                 {
                     var start = DateTime.Now;
                     distribution.RegisterPeer();
+                    distribution.SynchronizeRequestAccounts();
                     const int timeOutSeconds = 5;
                     while (true)
                     {
-                        if (AccountList.Accounts.Contains(account) || DateTime.Now - start < TimeSpan.FromSeconds(timeOutSeconds)) break;
+                        if (AccountList.Accounts.Contains(account) || DateTime.Now - start > TimeSpan.FromSeconds(timeOutSeconds)) break;
                     }
                 });
                 var returnResult = false;
@@ -62,7 +63,11 @@ namespace P2PWpfAppTest
                 }
                 else
                 {
-                    if (CustomMessageBox.Show("Уч. запись не найдена.\r\nХотите зарегестрироватся?",
+                    if (AccountList.Contains(account.PublicCode))
+                    {
+                        CustomMessageBox.Show("Неверный логин или пароль");
+                    }
+                    else if (CustomMessageBox.Show("Уч. запись не найдена.\r\nХотите зарегестрироватся?",
                             button: MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                     {
                         distribution.RegisterNode(account);

@@ -1,6 +1,5 @@
 ﻿using StepCoin.BaseClasses;
 using StepCoin.BlockChainClasses;
-using StepCoin.Hash;
 using System.ServiceModel;
 
 namespace StepCoin.Distribution

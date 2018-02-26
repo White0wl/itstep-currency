@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:P2PWpfAppTest"
         xmlns:controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         mc:Ignorable="d"
-        Title="SignInWindow" Height="187.03" Width="365.272">
+                      WindowStartupLocation="CenterScreen"
+        Title="SignInWindow" Height="200" Width="400" ResizeMode="NoResize">
     <Window.CommandBindings>
         <CommandBinding Command="local:CustomCommands.SignIn" CanExecute="CommandBinding_CanExecute" Executed="CommandBinding_Executed" />
     </Window.CommandBindings>
